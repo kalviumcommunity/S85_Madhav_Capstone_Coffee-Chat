@@ -1,9 +1,4 @@
-# ☕ Coffee Chat
 
-## 👋 Introduction
-Hello! I’m Madhav from **Squad 85**, and I’m excited to present my capstone project: **Coffee Chat** — a community-driven event discovery platform.
-
----
 
 ## 💡 Project Overview
 
@@ -72,3 +67,6 @@ Hello! I’m Madhav from **Squad 85**, and I’m excited to present my capstone 
 ---
 
 Thank you for checking out **Coffee Chat** — stay tuned for progress updates!
+=======
+Hello! I’m Madhav from **Squad 85**, and I’m excited to present my capstone project: **Coffee Chat** — a community-driven event discovery platform.
+
