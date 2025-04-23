@@ -1,0 +1,19 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Coffee Chat is a web-based platform that connects like-minded individuals through interest-based community groups and events. Built with the MERN stack and hosted on AWS, the platform allows users to discover local events, join or create groups, and engage in meaningful conversations—making it easier to build real-world connections around shared passions.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Madhav Garg",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.13.2",
+    "nodemon": "^3.1.9"
+  }
+}
