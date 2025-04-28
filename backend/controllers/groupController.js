@@ -35,4 +35,20 @@ exports.createGroup = async (req, res) => {
   }
 };
 
-module.exports = { getAllGroups,createGroup };
+const updateGroup = async (req, res) => {
+  try {
+    const updatedGroup = await Group.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+    if (!updatedGroup) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+    res.status(200).json({ message: 'Group updated successfully', group: updatedGroup });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating group', error: err });
+  }
+};
+
+module.exports = { getAllGroups,createGroup,updateGroup };
