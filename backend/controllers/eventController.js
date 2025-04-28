@@ -9,7 +9,7 @@ const getAllEvents = async (req, res) => {
   }
 };
 
-exports.createEvent = async (req, res) => {
+const createEvent = async (req, res) => {
   try {
     const { title, description, date, location, createdBy } = req.body;
 
@@ -31,7 +31,7 @@ exports.createEvent = async (req, res) => {
 
     res.status(201).json({ message: 'Event created successfully', event: newEvent });
   } catch (err) {
-    res.status(500).json({ message: 'Error creating event', error: err });
+    res.status(500).json({ message: 'Error creating event', error: err.message });
   }
 };
 
