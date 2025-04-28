@@ -14,7 +14,7 @@ const createGroup = async (req, res) => {
   try {
     const { name, description, members, createdBy } = req.body;
 
-    // Validate the user who is creating the group
+  
     const user = await User.findById(createdBy);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -51,4 +51,18 @@ const updateGroup = async (req, res) => {
   }
 };
 
-module.exports = { getAllGroups,createGroup,updateGroup };
+const deleteGroup = async (req, res) => {
+  try {
+    const group = await Group.findByIdAndDelete(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    res.status(200).json({ message: 'Group deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { getAllGroups,createGroup,updateGroup,deleteGroup };
