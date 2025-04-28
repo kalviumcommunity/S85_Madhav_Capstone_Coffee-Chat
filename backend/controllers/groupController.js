@@ -10,7 +10,7 @@ const getAllGroups = async (req, res) => {
     res.status(500).json({ message: 'Error fetching groups', error });
   }
 };
-exports.createGroup = async (req, res) => {
+const createGroup = async (req, res) => {
   try {
     const { name, description, members, createdBy } = req.body;
 
@@ -20,14 +20,14 @@ exports.createGroup = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const newGroup = new Group({
+    const newGroup = await Group.create({
       name,
       description,
       members,
       createdBy,
     });
 
-    await newGroup.save();
+ 
 
     res.status(201).json({ message: 'Group created successfully', group: newGroup });
   } catch (err) {
@@ -47,7 +47,7 @@ const updateGroup = async (req, res) => {
     }
     res.status(200).json({ message: 'Group updated successfully', group: updatedGroup });
   } catch (err) {
-    res.status(500).json({ message: 'Error updating group', error: err });
+    res.status(500).json({ message: 'Error updating group', error: err.message });
   }
 };
 
