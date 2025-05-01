@@ -13,21 +13,14 @@ const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-  
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-   
+    const newUser = new User({ name, email, password });
 
-    const newUser =await User.create({
-      name,
-      email,
-      password
-    });
-
-     
+    await newUser.save();
 
     res.status(201).json({ message: 'User created successfully', user: newUser });
   } catch (err) {
@@ -35,4 +28,7 @@ const createUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers,createUser };
+module.exports = {
+  getAllUsers,
+  createUser
+};
