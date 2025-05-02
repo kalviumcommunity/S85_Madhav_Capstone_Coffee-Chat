@@ -1,0 +1,88 @@
+/* Reset & base styles */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+  background: linear-gradient(to bottom right, #f3e9dc, #ede0d4);
+  color: #3e2f1c;
+  height: 100%;
+}
+
+/* Center everything */
+.app {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 1rem;
+}
+
+/* Card layout for the welcome message */
+.hero-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 3rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e6dcd0;
+  transition: transform 0.3s ease;
+}
+
+.hero-container:hover {
+  transform: translateY(-4px);
+}
+
+/* Heading styles */
+.title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #4b2e1e;
+}
+
+/* Subtitle text */
+.subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 2.5rem;
+  color: #6b4f3b;
+  line-height: 1.6;
+}
+
+/* CTA Button */
+.cta-button {
+  background-color: #7b4f2c;
+  color: white;
+  border: none;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.cta-button:hover {
+  background-color: #643d22;
+  transform: scale(1.05);
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .hero-container {
+    padding: 2rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .cta-button {
+    width: 100%;
+  }
+}
