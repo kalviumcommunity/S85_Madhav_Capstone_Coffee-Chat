@@ -90,41 +90,49 @@ a:hover {
 /* -------- Intro Section -------- */
 .intro-section {
   display: flex;
-  align-items: center;
+  align-items: stretch;              /* 🧩 Make both sides same height */
+  justify-content: center;
+  gap: 3rem;
   max-width: 1100px;
   margin: 3rem auto 5rem auto;
   padding: 0 1.5rem;
-  gap: 3rem;
+  flex-wrap: wrap;
 }
 
 .intro-image {
   flex: 1;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  max-width: 450px;
-  height: auto;
-  object-fit: cover;
+  min-height: 220px;                /* 📏 Match the height of content */
+  display: flex;
+  align-items: center;              /* ✅ Center image vertically */
+  justify-content: center;
 }
 
 .intro-image img {
   width: 100%;
-  border-radius: 12px;
-  display: block;
+  height: auto;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .intro-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;          /* ✅ Center content vertically */
+  min-height: 220px;                /* 📏 Match image height */
 }
 
 .intro-content h2 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
   color: var(--primary-color);
 }
 
 .intro-content p {
   font-size: 1.1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.5;
   color: #444;
 }
@@ -364,6 +372,63 @@ a:hover {
 }
 
 /* Responsive tweaks */
+/* -------- Intro Section -------- */
+.intro-section {
+  display: flex;
+  align-items: center;           /* ✅ Vertical center alignment */
+  justify-content: center;
+  gap: 3rem;
+  max-width: 1100px;
+  margin: 3rem auto 5rem auto;
+  padding: 0 1.5rem;
+  flex-wrap: wrap;
+}
+
+.intro-image {
+  flex: 1;
+  max-width: 300px;
+  display: flex;
+  align-items: center;          /* ✅ Center image vertically */
+  justify-content: center;
+}
+
+.intro-image img {
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.intro-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;     /* ✅ Vertical center for text/buttons */
+  max-width: 500px;
+  min-height: 220px;           /* ✅ Match image height */
+}
+
+.intro-content h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.intro-content p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  color: #444;
+}
+
+.intro-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Responsive tweaks */
 @media (max-width: 900px) {
   .intro-section {
     flex-direction: column;
@@ -375,33 +440,17 @@ a:hover {
     max-width: 100%;
   }
   
-  .cards-container {
-    justify-content: center;
+  .intro-image {
+    height: auto !important;
+    width: 100% !important;
   }
   
-  .card {
-    flex: 1 1 80%;
-    max-width: 80%;
-  }
-  
-  .footer-top {
-    flex-direction: column;
-  }
-  
-  .footer-section {
-    min-width: auto;
-  }
-  
-  .footer-bottom {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.5rem;
-  }
-  
-  .footer-bottom ul {
-    justify-content: center;
+  .intro-image img {
+    height: auto !important;
+    width: 100% !important;
   }
 }
+
 
 @media (max-width: 480px) {
   .banner-content h1 {

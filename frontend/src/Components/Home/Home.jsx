@@ -42,26 +42,26 @@ const Home = ({ user, groups, events }) => {
 
       {/* Intro Section: Small image left, message right */}
       <section className="intro-section">
-        <img
-          src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80"
-          alt="Join Chat"
-          className="intro-image"
-        />
-        <div className="intro-content">
-          <h2>Join the Conversation</h2>
-          <p>
-            Find groups or start your own chat to connect with people who share your interests.
-          </p>
-          <div className="intro-buttons">
-            <button className="btn-primary" onClick={() => alert('Join a chat clicked')}>
-              Join a Chat
-            </button>
-            <button className="btn-secondary" onClick={() => alert('Start a chat clicked')}>
-              Start a Chat
-            </button>
-          </div>
-        </div>
-      </section>
+  <div className="intro-image">
+    <img
+      src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80"
+      alt="Join Chat"
+    />
+  </div>
+  <div className="intro-content">
+    <h2>Join the Conversation</h2>
+    <p>
+      Find groups or start your own chat to connect with people who share your interests.
+    </p>
+    <div className="intro-buttons">
+      <button className="btn-primary">Join a Chat</button>
+      <button className="btn-secondary">Start a Chat</button>
+    </div>
+  </div>
+</section>
+
+
+
 
       {/* Groups and Events Section with unified premium background */}
       <section className="listings-section premium-bg">
