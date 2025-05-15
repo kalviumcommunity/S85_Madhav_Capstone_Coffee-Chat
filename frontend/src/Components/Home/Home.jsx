@@ -41,10 +41,10 @@ const Home = ({ user, groups, events }) => {
       </section>
 
       {/* Intro Section: Small image left, message right */}
-      <section className="intro-section">
+<section className="intro-section">
   <div className="intro-image">
     <img
-      src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80"
+      src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=600"
       alt="Join Chat"
     />
   </div>
