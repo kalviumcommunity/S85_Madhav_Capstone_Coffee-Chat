@@ -14,6 +14,14 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+
+
+
+
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+
+
+
 // Test route
 app.get("/", async (req, res) => {
   res.json("This is my Coffee Chat website");
