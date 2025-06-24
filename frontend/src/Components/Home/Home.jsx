@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Navbar from '../Navbar/Navbar';
 import './Home.css';
 
-const Home = ({ user, groups, events }) => {
+const Home = ({ user, setUser, groups, events }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredGroups = (groups || []).filter(group =>
@@ -15,10 +15,10 @@ const Home = ({ user, groups, events }) => {
     event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     event.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   return (
     <>
-      <Navbar user={user} />
+      
+      <Navbar user={user} setUser={setUser} />
 
       {/* Banner Section */}
       <section className="banner">
@@ -124,8 +124,8 @@ const Home = ({ user, groups, events }) => {
           <div className="footer-section">
             <h4>Your Account</h4>
             <ul>
-              <li><a href="#">Sign up</a></li>
-              <li><a href="#">Log in</a></li>
+              <li><a href="/signup">Sign up</a></li>
+              <li><a href="/login">Log in</a></li>
               <li><a href="#">Help</a></li>
             </ul>
           </div>
