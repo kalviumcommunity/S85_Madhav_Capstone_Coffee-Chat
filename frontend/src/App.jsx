@@ -55,9 +55,9 @@ function App() {
         <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
         <Route path="/groups" element={<Groups user={user} setUser={setUser} />} />
         <Route path="/groups/:id" element={<GroupDetails user={user} setUser={setUser} />} />
-        {/* <Route path="/groups/create" element={<CreateGroup user={user} setUser={setUser} />} /> */}
+        
         <Route path="/events" element={<Events user={user} setUser={setUser} />} />
-        {/* <Route path="/events/create" element={<CreateEvent user={user} setUser={setUser} />} /> */}
+        
       </Routes>
     </Router>
   );
