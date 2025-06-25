@@ -9,6 +9,7 @@ router.get('/', getAllUsers);
 
 // Register new user (signup)
 router.post('/signup', registerUser);
+
 router.post('/login', loginUser);
 router.post('/google-login', googleLogin);
 router.get('/profile', authenticateJWT, getProfile);

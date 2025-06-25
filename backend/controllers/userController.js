@@ -16,6 +16,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const path = require('path');
 
 //signup
 const registerUser = async (req, res) => {
@@ -28,18 +29,24 @@ const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
       location,
-      profileImage,
+      profileImage: profileImage || 'https://via.placeholder.com/150',
     });
 
     await newUser.save();
 
+    const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+
     res.status(201).json({
       message: 'User created successfully',
+      token,
       user: {
         _id: newUser._id,
         name: newUser.name,
