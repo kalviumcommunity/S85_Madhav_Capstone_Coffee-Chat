@@ -3,51 +3,182 @@ const User = require('../models/User');
 
 const getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find().populate('createdBy', 'name email');
-    res.status(200).json(events);
+    const events = await Event.find()
+      .populate('createdBy', 'name email profileImage')
+      .populate('attendees', 'name email profileImage');
+
+    // Add attendee count and check if current user is attending
+    const eventsWithCounts = events.map(event => {
+      const eventObj = event.toObject();
+      eventObj.attendeeCount = event.attendees.length;
+      
+      // Check if current user is attending
+      if (req.user) {
+        eventObj.isAttending = event.attendees.some(attendee => 
+          attendee._id.toString() === req.user._id.toString()
+        );
+      }
+      
+      return eventObj;
+    });
+
+    res.status(200).json(eventsWithCounts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching events', error });
   }
 };
 
-const createEvent = async (req, res) => {
+const getEventById = async (req, res) => {
   try {
-    const { title, description, date, location, createdBy } = req.body;
+    const event = await Event.findById(req.params.id)
+      .populate('createdBy', 'name email profileImage')
+      .populate('attendees', 'name email profileImage location');
 
-    const user = await User.findById(createdBy);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
     }
 
+    const eventObj = event.toObject();
+    eventObj.attendeeCount = event.attendees.length;
+    
+    // Check if current user is attending
+    if (req.user) {
+      eventObj.isAttending = event.attendees.some(attendee => 
+        attendee._id.toString() === req.user._id.toString()
+      );
+    }
+
+    res.status(200).json(eventObj);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching event', error });
+  }
+};
+
+const getEventAttendees = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('attendees', 'name email profileImage location');
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    res.status(200).json(event.attendees);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching event attendees', error });
+  }
+};
+
+const getUserEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ attendees: req.user._id })
+      .populate('createdBy', 'name email profileImage')
+      .populate('attendees', 'name email profileImage');
+
+    const eventsWithCounts = events.map(event => {
+      const eventObj = event.toObject();
+      eventObj.attendeeCount = event.attendees.length;
+      eventObj.isAttending = true; // User is definitely attending
+      return eventObj;
+    });
+
+    res.status(200).json(eventsWithCounts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user events', error });
+  }
+};
+
+const createEvent = async (req, res) => {
+  try {
+    const { name, description, city, date, image } = req.body;
+
     const newEvent = new Event({
-      title,
+      name,
       description,
+      city,
       date,
-      location,
-      createdBy
+      image,
+      createdBy: req.user._id,
+      attendees: [req.user._id] // Creator is automatically attending
     });
 
     await newEvent.save();
 
-    res.status(201).json({ message: 'Event created successfully', event: newEvent });
+    // Populate the created event with user details
+    const populatedEvent = await Event.findById(newEvent._id)
+      .populate('createdBy', 'name email profileImage')
+      .populate('attendees', 'name email profileImage');
+
+    res.status(201).json(populatedEvent);
   } catch (err) {
     res.status(500).json({ message: 'Error creating event', error: err.message });
   }
 };
 
+const joinEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Check if user is already attending
+    if (event.attendees.includes(req.user._id)) {
+      return res.status(400).json({ message: 'Already attending this event' });
+    }
+
+    event.attendees.push(req.user._id);
+    await event.save();
+
+    res.status(200).json({ message: 'Successfully joined event' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error joining event', error });
+  }
+};
+
+const leaveEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Remove user from attendees array
+    event.attendees = event.attendees.filter(attendeeId => 
+      attendeeId.toString() !== req.user._id.toString()
+    );
+    
+    await event.save();
+
+    res.status(200).json({ message: 'Successfully left event' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error leaving event', error });
+  }
+};
+
 const updateEvent = async (req, res) => {
   try {
+    const event = await Event.findById(req.params.id);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Check if user is the creator
+    if (event.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this event' });
+    }
+
     const updatedEvent = await Event.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
       { new: true }
-    );
+    ).populate('createdBy', 'name email profileImage')
+     .populate('attendees', 'name email profileImage');
 
-    if (!updatedEvent) {
-      return res.status(404).json({ message: 'Event not found' });
-    }
-
-    res.status(200).json({ message: 'Event updated successfully', event: updatedEvent });
+    res.status(200).json(updatedEvent);
   } catch (err) {
     res.status(500).json({ message: 'Error updating event', error: err.message });
   }
@@ -55,11 +186,18 @@ const updateEvent = async (req, res) => {
 
 const deleteEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
-
+    const event = await Event.findById(req.params.id);
+    
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
+
+    // Check if user is the creator
+    if (event.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this event' });
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
 
     res.status(200).json({ message: 'Event deleted successfully' });
   } catch (error) {
@@ -69,7 +207,12 @@ const deleteEvent = async (req, res) => {
 
 module.exports = {
   getAllEvents,
+  getEventById,
+  getEventAttendees,
+  getUserEvents,
   createEvent,
+  joinEvent,
+  leaveEvent,
   updateEvent,
   deleteEvent
 };
