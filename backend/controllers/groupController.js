@@ -13,9 +13,9 @@ const getAllGroups = async (req, res) => {
       groupObj.memberCount = group.members.length;
       
       // Check if current user is a member
-      if (req.user) {
+      if (req.user && req.user.userId) {
         groupObj.isMember = group.members.some(member => 
-          member._id.toString() === req.user._id.toString()
+          member._id.toString() === req.user.userId.toString()
         );
       }
       
@@ -42,9 +42,9 @@ const getGroupById = async (req, res) => {
     groupObj.memberCount = group.members.length;
     
     // Check if current user is a member
-    if (req.user) {
+    if (req.user && req.user.userId) {
       groupObj.isMember = group.members.some(member => 
-        member._id.toString() === req.user._id.toString()
+        member._id.toString() === req.user.userId.toString()
       );
     }
 
@@ -71,7 +71,7 @@ const getGroupMembers = async (req, res) => {
 
 const getUserGroups = async (req, res) => {
   try {
-    const groups = await Group.find({ members: req.user._id })
+    const groups = await Group.find({ members: req.user.userId })
       .populate('createdBy', 'name email profileImage')
       .populate('members', 'name email profileImage');
 
@@ -90,15 +90,23 @@ const getUserGroups = async (req, res) => {
 
 const createGroup = async (req, res) => {
   try {
-    const { name, description, city, image } = req.body;
+    const { name, description, category, city, image } = req.body;
+
+    // Validate required fields
+    if (!name || !description || !category || !city) {
+      return res.status(400).json({ 
+        message: 'Missing required fields: name, description, category, and city are required' 
+      });
+    }
 
     const newGroup = new Group({
       name,
       description,
+      category,
       city,
       image,
-      createdBy: req.user._id,
-      members: [req.user._id] // Creator is automatically a member
+      createdBy: req.user.userId, // Use userId from JWT token
+      members: [req.user.userId] // Creator is automatically a member
     });
 
     await newGroup.save();
@@ -110,6 +118,7 @@ const createGroup = async (req, res) => {
 
     res.status(201).json(populatedGroup);
   } catch (err) {
+    console.error('Error creating group:', err);
     res.status(500).json({ message: 'Error creating group', error: err.message });
   }
 };
@@ -123,11 +132,11 @@ const joinGroup = async (req, res) => {
     }
 
     // Check if user is already a member
-    if (group.members.includes(req.user._id)) {
+    if (group.members.includes(req.user.userId)) {
       return res.status(400).json({ message: 'Already a member of this group' });
     }
 
-    group.members.push(req.user._id);
+    group.members.push(req.user.userId);
     await group.save();
 
     res.status(200).json({ message: 'Successfully joined group' });
@@ -146,7 +155,7 @@ const leaveGroup = async (req, res) => {
 
     // Remove user from members array
     group.members = group.members.filter(memberId => 
-      memberId.toString() !== req.user._id.toString()
+      memberId.toString() !== req.user.userId.toString()
     );
     
     await group.save();
@@ -166,7 +175,7 @@ const updateGroup = async (req, res) => {
     }
 
     // Check if user is the creator
-    if (group.createdBy.toString() !== req.user._id.toString()) {
+    if (group.createdBy.toString() !== req.user.userId.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this group' });
     }
 
@@ -192,7 +201,7 @@ const deleteGroup = async (req, res) => {
     }
 
     // Check if user is the creator
-    if (group.createdBy.toString() !== req.user._id.toString()) {
+    if (group.createdBy.toString() !== req.user.userId.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this group' });
     }
 
@@ -201,6 +210,57 @@ const deleteGroup = async (req, res) => {
     res.status(200).json({ message: 'Group deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Bookmark group
+const bookmarkGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    if (!user.bookmarkedGroups.includes(id)) {
+      user.bookmarkedGroups.push(id);
+      await user.save();
+    }
+
+    res.json({ message: 'Group bookmarked successfully' });
+  } catch (error) {
+    console.error('Bookmark group error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Unbookmark group
+const unbookmarkGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.bookmarkedGroups = user.bookmarkedGroups.filter(
+      groupId => groupId.toString() !== id
+    );
+    await user.save();
+
+    res.json({ message: 'Group unbookmarked successfully' });
+  } catch (error) {
+    console.error('Unbookmark group error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -213,5 +273,7 @@ module.exports = {
   joinGroup,
   leaveGroup,
   updateGroup,
-  deleteGroup
+  deleteGroup,
+  bookmarkGroup,
+  unbookmarkGroup
 };

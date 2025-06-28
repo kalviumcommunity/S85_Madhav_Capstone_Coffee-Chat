@@ -189,7 +189,7 @@ const Navbar = ({ user, setUser }) => {
                     className="flex items-center space-x-2 p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-colors duration-200"
                   >
                     <img
-                      src={user.profileImage || 'https://via.placeholder.com/32x32'}
+                      src={user.profileImage || 'https://cdn-icons-png.flaticon.com/128/847/847969.png'}
                       alt={user.name}
                       className="w-8 h-8 rounded-full object-cover"
                     />

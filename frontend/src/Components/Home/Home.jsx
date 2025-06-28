@@ -1,18 +1,17 @@
 // Home.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../Navbar/Navbar';
 import { 
   Search, 
+  MapPin, 
   Users, 
   Calendar, 
-  MapPin, 
-  ArrowRight, 
+  ArrowRight,
   Star,
   TrendingUp,
-  Clock
+  Coffee
 } from 'lucide-react';
-import './Home.css';
 
 const Home = ({ user, setUser }) => {
   const [featuredGroups, setFeaturedGroups] = useState([]);

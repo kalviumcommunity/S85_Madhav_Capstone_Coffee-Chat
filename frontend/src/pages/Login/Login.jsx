@@ -1,16 +1,12 @@
 // src/pages/Login/Login.jsx
-import React, { useState } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { jwtDecode } from 'jwt-decode'; // ✅ Add this
-import app from '../../firebase';
-import './Login.css';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
 
-const Login = ({ setUser, fetchUserProfile }) => {
+const Login = ({ setUser }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -74,7 +70,7 @@ const Login = ({ setUser, fetchUserProfile }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        await fetchUserProfile(data.token);
+        setUser(data.user);
         toast.success('Welcome back!');
         navigate('/');
       } else {
@@ -93,39 +89,31 @@ const Login = ({ setUser, fetchUserProfile }) => {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      // Initialize Firebase (you'll need to add your config)
-      const firebaseConfig = {
-        // Add your Firebase config here
-        apiKey: "your-api-key",
-        authDomain: "your-auth-domain",
-        projectId: "your-project-id",
-        storageBucket: "your-storage-bucket",
-        messagingSenderId: "your-messaging-sender-id",
-        appId: "your-app-id"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
       const provider = new GoogleAuthProvider();
-
       const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-
+      const user = result.user;
+      
+      // Get the ID token
+      const idToken = await user.getIdToken();
+      
       // Send token to backend
       const response = await fetch('http://localhost:3000/api/users/google-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({
+          token: idToken,
+          mode: 'login'
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        await fetchUserProfile(data.token);
-        toast.success('Welcome to Coffee Chat!');
+        setUser(data.user);
+        toast.success('Welcome back!');
         navigate('/');
       } else {
         toast.error(data.error || 'Google login failed');
@@ -228,67 +216,39 @@ const Login = ({ setUser, fetchUserProfile }) => {
               )}
             </div>
 
-            {/* Forgot Password Link */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-secondary-700 dark:text-secondary-300">
-                  Remember me
-                </label>
-              </div>
-              <Link
-                to="/forgot-password"
-                className="text-sm text-primary-600 hover:text-primary-500 font-medium"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="btn-primary w-full flex items-center justify-center space-x-2"
             >
               {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Signing in...</span>
-                </>
-              ) : (
-                <span>Sign in</span>
-              )}
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : null}
+              <span>{loading ? 'Signing in...' : 'Sign in'}</span>
             </button>
-          </form>
 
-          {/* Divider */}
-          <div className="mt-6">
+            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-secondary-300 dark:border-secondary-600"></div>
+                <div className="w-full border-t border-secondary-300 dark:border-secondary-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-secondary-800 text-secondary-500 dark:text-secondary-400">
+                <span className="px-2 bg-white dark:bg-secondary-800 text-secondary-500">
                   Or continue with
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Google Login Button */}
-          <div className="mt-6">
+            {/* Google Login Button */}
             <button
+              type="button"
               onClick={handleGoogleLogin}
               disabled={googleLoading}
-              className="w-full flex items-center justify-center space-x-3 px-4 py-2 border border-secondary-300 dark:border-secondary-600 rounded-lg shadow-sm bg-white dark:bg-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center space-x-3 px-4 py-2 border border-secondary-300 dark:border-secondary-600 rounded-lg text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors duration-200"
             >
               {googleLoading ? (
-                <div className="w-5 h-5 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -311,20 +271,20 @@ const Login = ({ setUser, fetchUserProfile }) => {
               )}
               <span>{googleLoading ? 'Signing in...' : 'Sign in with Google'}</span>
             </button>
-          </div>
+          </form>
+        </div>
 
-          {/* Sign Up Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-secondary-600 dark:text-secondary-300">
-              Don't have an account?{' '}
-              <Link
-                to="/signup"
-                className="font-medium text-primary-600 hover:text-primary-500"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
+        {/* Sign Up Link */}
+        <div className="text-center">
+          <p className="text-secondary-600 dark:text-secondary-300">
+            Don't have an account?{' '}
+            <Link
+              to="/signup"
+              className="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200"
+            >
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </div>

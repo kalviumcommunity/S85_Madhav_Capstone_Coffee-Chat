@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, MapPin, AlertCircle, Check } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
 
-const Signup = ({ setUser, fetchUserProfile }) => {
+const Signup = ({ setUser }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -55,8 +55,6 @@ const Signup = ({ setUser, fetchUserProfile }) => {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
     }
     
     if (!formData.confirmPassword) {
@@ -80,7 +78,7 @@ const Signup = ({ setUser, fetchUserProfile }) => {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/users/signup', {
+      const response = await fetch('http://localhost:3000/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +95,7 @@ const Signup = ({ setUser, fetchUserProfile }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        await fetchUserProfile(data.token);
+        setUser(data.user);
         toast.success('Welcome to Coffee Chat!');
         navigate('/');
       } else {
@@ -116,35 +114,22 @@ const Signup = ({ setUser, fetchUserProfile }) => {
   const handleGoogleSignup = async () => {
     setGoogleLoading(true);
     try {
-      // Initialize Firebase (you'll need to add your config)
-      const firebaseConfig = {
-        // Add your Firebase config here
-        apiKey: "your-api-key",
-        authDomain: "your-auth-domain",
-        projectId: "your-project-id",
-        storageBucket: "your-storage-bucket",
-        messagingSenderId: "your-messaging-sender-id",
-        appId: "your-app-id"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
       const provider = new GoogleAuthProvider();
-
       const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-
+      const user = result.user;
+      
+      // Get the ID token
+      const idToken = await user.getIdToken();
+      
       // Send token to backend
-      const response = await fetch('http://localhost:3000/api/users/google-signup', {
+      const response = await fetch('http://localhost:3000/api/users/google-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          idToken,
-          name: result.user.displayName,
-          email: result.user.email,
-          profileImage: result.user.photoURL
+        body: JSON.stringify({
+          token: idToken,
+          mode: 'signup'
         }),
       });
 
@@ -152,7 +137,7 @@ const Signup = ({ setUser, fetchUserProfile }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        await fetchUserProfile(data.token);
+        setUser(data.user);
         toast.success('Welcome to Coffee Chat!');
         navigate('/');
       } else {
@@ -175,15 +160,14 @@ const Signup = ({ setUser, fetchUserProfile }) => {
     if (/(?=.*[a-z])/.test(formData.password)) score++;
     if (/(?=.*[A-Z])/.test(formData.password)) score++;
     if (/(?=.*\d)/.test(formData.password)) score++;
-    if (/(?=.*[!@#$%^&*])/.test(formData.password)) score++;
 
-    const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
-    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500', 'bg-emerald-500'];
+    const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
     
     return {
-      score: Math.min(score, 5),
-      label: labels[Math.min(score - 1, 5)],
-      color: colors[Math.min(score - 1, 5)]
+      score: Math.min(score, 4),
+      label: labels[Math.min(score - 1, 4)] || '',
+      color: colors[Math.min(score - 1, 4)] || ''
     };
   };
 
@@ -200,10 +184,10 @@ const Signup = ({ setUser, fetchUserProfile }) => {
             </div>
           </div>
           <h2 className="text-3xl font-bold text-secondary-900 dark:text-white">
-            Join Coffee Chat
+            Create your account
           </h2>
           <p className="mt-2 text-secondary-600 dark:text-secondary-300">
-            Create your account and start connecting
+            Join Coffee Chat and connect with people who share your interests
           </p>
         </div>
 
@@ -223,7 +207,7 @@ const Signup = ({ setUser, fetchUserProfile }) => {
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                Full Name
+                Full name
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
@@ -275,7 +259,7 @@ const Signup = ({ setUser, fetchUserProfile }) => {
             {/* Location Field */}
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                Location (Optional)
+                Location (optional)
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
@@ -318,37 +302,38 @@ const Signup = ({ setUser, fetchUserProfile }) => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.password}
+                </p>
+              )}
               
               {/* Password Strength Indicator */}
               {formData.password && (
                 <div className="mt-2">
                   <div className="flex space-x-1">
-                    {[...Array(6)].map((_, i) => (
+                    {[1, 2, 3, 4, 5].map((level) => (
                       <div
-                        key={i}
+                        key={level}
                         className={`h-1 flex-1 rounded-full ${
-                          i < strength.score ? strength.color : 'bg-secondary-200 dark:bg-secondary-700'
+                          level <= strength.score ? strength.color : 'bg-secondary-200 dark:bg-secondary-700'
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="text-xs text-secondary-500 dark:text-secondary-400 mt-1">
-                    {strength.label}
-                  </p>
+                  {strength.label && (
+                    <p className="mt-1 text-xs text-secondary-600 dark:text-secondary-400">
+                      Password strength: {strength.label}
+                    </p>
+                  )}
                 </div>
-              )}
-              
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.password}
-                </p>
               )}
             </div>
 
             {/* Confirm Password Field */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                Confirm Password
+                Confirm password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
@@ -386,17 +371,17 @@ const Signup = ({ setUser, fetchUserProfile }) => {
                 type="checkbox"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded mt-1"
+                className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
               />
               <label htmlFor="terms" className="text-sm text-secondary-700 dark:text-secondary-300">
                 I agree to the{' '}
-                <Link to="/terms" className="text-primary-600 hover:text-primary-500 font-medium">
+                <a href="#" className="text-primary-600 hover:text-primary-500 font-medium">
                   Terms of Service
-                </Link>{' '}
+                </a>{' '}
                 and{' '}
-                <Link to="/privacy" className="text-primary-600 hover:text-primary-500 font-medium">
+                <a href="#" className="text-primary-600 hover:text-primary-500 font-medium">
                   Privacy Policy
-                </Link>
+                </a>
               </label>
             </div>
             {errors.terms && (
@@ -409,42 +394,35 @@ const Signup = ({ setUser, fetchUserProfile }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="btn-primary w-full flex items-center justify-center space-x-2"
             >
               {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Creating account...</span>
-                </>
-              ) : (
-                <span>Create account</span>
-              )}
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : null}
+              <span>{loading ? 'Creating account...' : 'Create account'}</span>
             </button>
-          </form>
 
-          {/* Divider */}
-          <div className="mt-6">
+            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-secondary-300 dark:border-secondary-600"></div>
+                <div className="w-full border-t border-secondary-300 dark:border-secondary-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-secondary-800 text-secondary-500 dark:text-secondary-400">
+                <span className="px-2 bg-white dark:bg-secondary-800 text-secondary-500">
                   Or continue with
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Google Signup Button */}
-          <div className="mt-6">
+            {/* Google Signup Button */}
             <button
+              type="button"
               onClick={handleGoogleSignup}
               disabled={googleLoading}
-              className="w-full flex items-center justify-center space-x-3 px-4 py-2 border border-secondary-300 dark:border-secondary-600 rounded-lg shadow-sm bg-white dark:bg-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center space-x-3 px-4 py-2 border border-secondary-300 dark:border-secondary-600 rounded-lg text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors duration-200"
             >
               {googleLoading ? (
-                <div className="w-5 h-5 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -467,20 +445,20 @@ const Signup = ({ setUser, fetchUserProfile }) => {
               )}
               <span>{googleLoading ? 'Creating account...' : 'Sign up with Google'}</span>
             </button>
-          </div>
+          </form>
+        </div>
 
-          {/* Login Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-secondary-600 dark:text-secondary-300">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="font-medium text-primary-600 hover:text-primary-500"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
+        {/* Sign In Link */}
+        <div className="text-center">
+          <p className="text-secondary-600 dark:text-secondary-300">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
     </div>
