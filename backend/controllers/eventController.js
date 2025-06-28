@@ -13,9 +13,9 @@ const getAllEvents = async (req, res) => {
       eventObj.attendeeCount = event.attendees.length;
       
       // Check if current user is attending
-      if (req.user) {
+      if (req.user && req.user.userId) {
         eventObj.isAttending = event.attendees.some(attendee => 
-          attendee._id.toString() === req.user._id.toString()
+          attendee._id.toString() === req.user.userId.toString()
         );
       }
       
@@ -42,9 +42,9 @@ const getEventById = async (req, res) => {
     eventObj.attendeeCount = event.attendees.length;
     
     // Check if current user is attending
-    if (req.user) {
+    if (req.user && req.user.userId) {
       eventObj.isAttending = event.attendees.some(attendee => 
-        attendee._id.toString() === req.user._id.toString()
+        attendee._id.toString() === req.user.userId.toString()
       );
     }
 
@@ -71,7 +71,7 @@ const getEventAttendees = async (req, res) => {
 
 const getUserEvents = async (req, res) => {
   try {
-    const events = await Event.find({ attendees: req.user._id })
+    const events = await Event.find({ attendees: req.user.userId })
       .populate('createdBy', 'name email profileImage')
       .populate('attendees', 'name email profileImage');
 
@@ -90,16 +90,24 @@ const getUserEvents = async (req, res) => {
 
 const createEvent = async (req, res) => {
   try {
-    const { name, description, city, date, image } = req.body;
+    const { name, description, category, city, date, image } = req.body;
+
+    // Validate required fields
+    if (!name || !description || !category || !city || !date) {
+      return res.status(400).json({ 
+        message: 'Missing required fields: name, description, category, city, and date are required' 
+      });
+    }
 
     const newEvent = new Event({
       name,
       description,
+      category,
       city,
       date,
       image,
-      createdBy: req.user._id,
-      attendees: [req.user._id] // Creator is automatically attending
+      createdBy: req.user.userId, // Use userId from JWT token
+      attendees: [req.user.userId] // Creator is automatically attending
     });
 
     await newEvent.save();
@@ -111,6 +119,7 @@ const createEvent = async (req, res) => {
 
     res.status(201).json(populatedEvent);
   } catch (err) {
+    console.error('Error creating event:', err);
     res.status(500).json({ message: 'Error creating event', error: err.message });
   }
 };
@@ -124,11 +133,11 @@ const joinEvent = async (req, res) => {
     }
 
     // Check if user is already attending
-    if (event.attendees.includes(req.user._id)) {
+    if (event.attendees.includes(req.user.userId)) {
       return res.status(400).json({ message: 'Already attending this event' });
     }
 
-    event.attendees.push(req.user._id);
+    event.attendees.push(req.user.userId);
     await event.save();
 
     res.status(200).json({ message: 'Successfully joined event' });
@@ -147,7 +156,7 @@ const leaveEvent = async (req, res) => {
 
     // Remove user from attendees array
     event.attendees = event.attendees.filter(attendeeId => 
-      attendeeId.toString() !== req.user._id.toString()
+      attendeeId.toString() !== req.user.userId.toString()
     );
     
     await event.save();
@@ -167,7 +176,7 @@ const updateEvent = async (req, res) => {
     }
 
     // Check if user is the creator
-    if (event.createdBy.toString() !== req.user._id.toString()) {
+    if (event.createdBy.toString() !== req.user.userId.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this event' });
     }
 
@@ -193,7 +202,7 @@ const deleteEvent = async (req, res) => {
     }
 
     // Check if user is the creator
-    if (event.createdBy.toString() !== req.user._id.toString()) {
+    if (event.createdBy.toString() !== req.user.userId.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this event' });
     }
 

@@ -58,10 +58,6 @@ const groupSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  memberCount: {
-    type: Number,
-    default: 0
-  },
   isActive: {
     type: Boolean,
     default: true

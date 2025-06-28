@@ -13,6 +13,7 @@ import {
   Star
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import './Groups.css';
 
 const Groups = ({ user, setUser }) => {
   const [groups, setGroups] = useState([]);
@@ -123,118 +124,150 @@ const Groups = ({ user, setUser }) => {
     }
   };
 
-  const GroupCard = ({ group }) => (
-    <div className="card-hover group">
-      <div className="relative mb-4">
-        <img
-          src={group.image || 'https://via.placeholder.com/400x200'}
-          alt={group.name}
-          className="w-full h-48 object-cover rounded-lg"
-        />
-        <div className="absolute top-3 left-3">
-          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-600">
-            {group.category}
-          </span>
-        </div>
-        <div className="absolute top-3 right-3">
-          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-white/90 dark:bg-secondary-800/90 text-secondary-900 dark:text-white">
-            {group.privacy}
-          </span>
-        </div>
-      </div>
-      
-      <h3 className="text-xl font-semibold text-secondary-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
-        {group.name}
-      </h3>
-      
-      <p className="text-secondary-600 dark:text-secondary-300 mb-3 line-clamp-2">
-        {group.description}
-      </p>
-      
-      <div className="flex items-center justify-between text-sm text-secondary-500 dark:text-secondary-400 mb-4">
-        <div className="flex items-center space-x-1">
-          <MapPin className="w-4 h-4" />
-          <span>{group.city}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <Users className="w-4 h-4" />
-          <span>{group.memberCount || group.members?.length || 0} members</span>
-        </div>
-      </div>
-
-      <div className="flex space-x-2">
-        <Link
-          to={`/groups/${group._id}`}
-          className="flex-1 btn-outline text-center"
-        >
-          View Details
-        </Link>
-        <button
-          onClick={() => handleJoinGroup(group._id)}
-          className="flex-1 btn-primary"
-        >
-          Join Group
-        </button>
-      </div>
-    </div>
-  );
-
-  const GroupListItem = ({ group }) => (
-    <div className="card-hover group">
-      <div className="flex items-center space-x-4">
-        <img
-          src={group.image || 'https://via.placeholder.com/80x80'}
-          alt={group.name}
-          className="w-20 h-20 object-cover rounded-lg"
-        />
-        
-        <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-1">
-            <h3 className="text-lg font-semibold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
-              {group.name}
-            </h3>
+  const GroupCard = ({ group }) => {
+    const isMember = group.isMember || group.members?.some(member => member._id === user?._id);
+    
+    return (
+      <div className="card-hover group">
+        <div className="relative mb-4">
+          <img
+            src={group.image || 'https://via.placeholder.com/400x200'}
+            alt={group.name}
+            className="w-full h-48 object-cover rounded-lg"
+            onError={(e) => {
+              e.target.src = 'https://via.placeholder.com/400x200';
+            }}
+          />
+          <div className="absolute top-3 left-3">
             <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-600">
               {group.category}
             </span>
           </div>
-          
-          <p className="text-secondary-600 dark:text-secondary-300 mb-2 line-clamp-1">
-            {group.description}
-          </p>
-          
-          <div className="flex items-center space-x-4 text-sm text-secondary-500 dark:text-secondary-400">
-            <div className="flex items-center space-x-1">
-              <MapPin className="w-4 h-4" />
-              <span>{group.city}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Users className="w-4 h-4" />
-              <span>{group.memberCount || group.members?.length || 0} members</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-4 h-4" />
-              <span>{new Date(group.createdAt).toLocaleDateString()}</span>
-            </div>
+          <div className="absolute top-3 right-3">
+            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-white/90 dark:bg-secondary-800/90 text-secondary-900 dark:text-white">
+              {group.privacy}
+            </span>
           </div>
         </div>
         
+        <h3 className="text-xl font-semibold text-secondary-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
+          {group.name}
+        </h3>
+        
+        <p className="text-secondary-600 dark:text-secondary-300 mb-3 line-clamp-2">
+          {group.description}
+        </p>
+        
+        <div className="flex items-center justify-between text-sm text-secondary-500 dark:text-secondary-400 mb-4">
+          <div className="flex items-center space-x-1">
+            <MapPin className="w-4 h-4" />
+            <span>{group.city}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Users className="w-4 h-4" />
+            <span>{group.memberCount || group.members?.length || 0} members</span>
+          </div>
+        </div>
+
         <div className="flex space-x-2">
           <Link
             to={`/groups/${group._id}`}
-            className="btn-outline"
+            className="flex-1 btn-outline text-center"
           >
             View Details
           </Link>
-          <button
-            onClick={() => handleJoinGroup(group._id)}
-            className="btn-primary"
-          >
-            Join Group
-          </button>
+          {!isMember ? (
+            <button
+              onClick={() => handleJoinGroup(group._id)}
+              className="flex-1 btn-primary"
+            >
+              Join Group
+            </button>
+          ) : (
+            <button
+              className="flex-1 btn-secondary"
+              disabled
+            >
+              Joined
+            </button>
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  const GroupListItem = ({ group }) => {
+    const isMember = group.isMember || group.members?.some(member => member._id === user?._id);
+    
+    return (
+      <div className="card-hover group">
+        <div className="flex items-center space-x-4">
+          <img
+            src={group.image || 'https://via.placeholder.com/80x80'}
+            alt={group.name}
+            className="w-20 h-20 object-cover rounded-lg"
+            onError={(e) => {
+              e.target.src = 'https://via.placeholder.com/80x80';
+            }}
+          />
+          
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-1">
+              <h3 className="text-lg font-semibold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
+                {group.name}
+              </h3>
+              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-600">
+                {group.category}
+              </span>
+            </div>
+            
+            <p className="text-secondary-600 dark:text-secondary-300 mb-2 line-clamp-1">
+              {group.description}
+            </p>
+            
+            <div className="flex items-center space-x-4 text-sm text-secondary-500 dark:text-secondary-400">
+              <div className="flex items-center space-x-1">
+                <MapPin className="w-4 h-4" />
+                <span>{group.city}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Users className="w-4 h-4" />
+                <span>{group.memberCount || group.members?.length || 0} members</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Calendar className="w-4 h-4" />
+                <span>{new Date(group.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex space-x-2">
+            <Link
+              to={`/groups/${group._id}`}
+              className="btn-outline"
+            >
+              View Details
+            </Link>
+            {!isMember ? (
+              <button
+                onClick={() => handleJoinGroup(group._id)}
+                className="btn-primary"
+              >
+                Join Group
+              </button>
+            ) : (
+              <button
+                className="btn-secondary"
+                disabled
+              >
+                Joined
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
