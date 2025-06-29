@@ -3,7 +3,7 @@ require("dotenv").config({ path: './config/.env' });
 
 const connectDatabase = async () => {
   try {
-    // Use MONGODB_URI from config/.env (updated to match the actual env variable)
+    // Use MONGODB_URI from config/.env
     const mongoUri = process.env.MONGODB_URI;
     
     console.log(`🔗 Attempting to connect to MongoDB...`);
