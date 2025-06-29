@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Login from './pages/Login/Login';
 import Signup from './pages/Signup/Signup';
 import Home from './Components/Home/Home';
@@ -17,35 +17,101 @@ import './App.css';
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
 
-  const checkAuthStatus = async () => {
+  // Function to refresh backend token using Firebase token
+  const refreshBackendToken = async (firebaseUser) => {
     try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const response = await fetch('http://localhost:3000/api/users/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+      const firebaseToken = await firebaseUser.getIdToken(true);
+      console.log('[App] Refreshing backend token with Firebase token...');
+      
+      const response = await fetch('http://localhost:3000/api/users/google-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: firebaseToken,
+          mode: 'login'
+        }),
+      });
 
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        } else {
-          localStorage.removeItem('token');
-        }
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        console.log('[App] Backend token refreshed successfully');
+        return data.user;
+      } else {
+        console.error('[App] Failed to refresh backend token:', response.status);
+        return null;
       }
     } catch (error) {
-      console.error('Error checking auth status:', error);
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
+      console.error('[App] Error refreshing backend token:', error);
+      return null;
     }
   };
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken(true);
+          console.log('[App] Firebase user authenticated:', firebaseUser.email);
+          
+          // Fetch backend user profile
+          const backendToken = localStorage.getItem('token');
+          if (backendToken) {
+            try {
+              console.log('[App] Backend token found, fetching profile...');
+              const response = await fetch('http://localhost:3000/api/users/profile', {
+                headers: {
+                  'Authorization': `Bearer ${backendToken}`
+                }
+              });
+              
+              if (response.ok) {
+                const backendUser = await response.json();
+                console.log('[App] Backend user profile loaded:', backendUser.name);
+                setUser(backendUser);
+              } else if (response.status === 401) {
+                console.error('[App] Backend token expired or invalid, attempting to refresh...');
+                localStorage.removeItem('token');
+                
+                // Try to refresh the backend token
+                const refreshedUser = await refreshBackendToken(firebaseUser);
+                if (refreshedUser) {
+                  console.log('[App] Backend token refreshed, user profile loaded:', refreshedUser.name);
+                  setUser(refreshedUser);
+                } else {
+                  console.log('[App] Failed to refresh backend token, using Firebase user');
+                  setUser(firebaseUser);
+                }
+              } else {
+                console.error('[App] Failed to load backend profile:', response.status);
+                // Fallback to Firebase user if backend profile fails
+                setUser(firebaseUser);
+              }
+            } catch (error) {
+              console.error('[App] Error loading backend profile:', error);
+              // Fallback to Firebase user if backend profile fails
+              setUser(firebaseUser);
+            }
+          } else {
+            console.log('[App] No backend token found, using Firebase user');
+            setUser(firebaseUser);
+          }
+        } catch (error) {
+          console.error('[App] Error getting Firebase token:', error);
+          setUser(null);
+        }
+      } else {
+        console.log('[App] No Firebase user, clearing user state');
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -90,7 +156,6 @@ function App() {
             },
           }}
         />
-        
         <Routes>
           <Route 
             path="/" 

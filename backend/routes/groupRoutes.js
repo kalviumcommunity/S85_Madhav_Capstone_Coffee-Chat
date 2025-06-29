@@ -10,8 +10,7 @@ const {
   leaveGroup,
   updateGroup, 
   deleteGroup,
-  bookmarkGroup,
-  unbookmarkGroup
+  bookmarkGroup
 } = require('../controllers/groupController');
 const auth = require('../middleware/auth');
 
@@ -50,7 +49,6 @@ router.post('/', auth, createGroup);
 router.post('/:id/join', auth, joinGroup);
 router.post('/:id/leave', auth, leaveGroup);
 router.post('/:id/bookmark', auth, bookmarkGroup);
-router.delete('/:id/bookmark', auth, unbookmarkGroup);
 router.put('/:id', auth, updateGroup);
 router.delete('/:id', auth, deleteGroup);
 

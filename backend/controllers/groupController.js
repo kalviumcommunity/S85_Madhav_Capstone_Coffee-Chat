@@ -22,6 +22,16 @@ const getAllGroups = async (req, res) => {
       return groupObj;
     });
 
+    // Add bookmark status if user is logged in
+    if (req.user && req.user.userId) {
+      const user = await User.findById(req.user.userId);
+      if (user && user.bookmarkedGroups) {
+        groupsWithCounts.forEach(group => {
+          group.isBookmarked = user.bookmarkedGroups.includes(group._id);
+        });
+      }
+    }
+
     res.status(200).json(groupsWithCounts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching groups', error });
@@ -46,6 +56,12 @@ const getGroupById = async (req, res) => {
       groupObj.isMember = group.members.some(member => 
         member._id.toString() === req.user.userId.toString()
       );
+      
+      // Add bookmark status
+      const user = await User.findById(req.user.userId);
+      if (user && user.bookmarkedGroups) {
+        groupObj.isBookmarked = user.bookmarkedGroups.includes(group._id);
+      }
     }
 
     res.status(200).json(groupObj);
@@ -213,54 +229,47 @@ const deleteGroup = async (req, res) => {
   }
 };
 
-// Bookmark group
+// Bookmark/Unbookmark group
 const bookmarkGroup = async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = req.user.userId;
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const group = await Group.findById(id);
+    const group = await Group.findById(req.params.id);
     if (!group) {
-      return res.status(404).json({ error: 'Group not found' });
+      return res.status(404).json({ message: 'Group not found' });
     }
 
-    if (!user.bookmarkedGroups.includes(id)) {
-      user.bookmarkedGroups.push(id);
-      await user.save();
-    }
-
-    res.json({ message: 'Group bookmarked successfully' });
-  } catch (error) {
-    console.error('Bookmark group error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-// Unbookmark group
-const unbookmarkGroup = async (req, res) => {
-  try {
-    const { id } = req.params;
     const userId = req.user.userId;
-
     const user = await User.findById(userId);
+    
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    user.bookmarkedGroups = user.bookmarkedGroups.filter(
-      groupId => groupId.toString() !== id
-    );
+    // Initialize bookmarkedGroups array if it doesn't exist
+    if (!user.bookmarkedGroups) {
+      user.bookmarkedGroups = [];
+    }
+
+    const isBookmarked = user.bookmarkedGroups.includes(group._id);
+    
+    if (isBookmarked) {
+      // Remove from bookmarks
+      user.bookmarkedGroups = user.bookmarkedGroups.filter(
+        groupId => groupId.toString() !== group._id.toString()
+      );
+    } else {
+      // Add to bookmarks
+      user.bookmarkedGroups.push(group._id);
+    }
+
     await user.save();
 
-    res.json({ message: 'Group unbookmarked successfully' });
+    res.status(200).json({ 
+      message: isBookmarked ? 'Group removed from bookmarks' : 'Group bookmarked successfully',
+      isBookmarked: !isBookmarked
+    });
   } catch (error) {
-    console.error('Unbookmark group error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error bookmarking group:', error);
+    res.status(500).json({ message: 'Error bookmarking group', error: error.message });
   }
 };
 
@@ -274,6 +283,5 @@ module.exports = {
   leaveGroup,
   updateGroup,
   deleteGroup,
-  bookmarkGroup,
-  unbookmarkGroup
+  bookmarkGroup
 };

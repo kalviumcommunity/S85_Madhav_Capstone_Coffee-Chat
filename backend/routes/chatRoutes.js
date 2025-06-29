@@ -1,10 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const admin = require('firebase-admin');
 const ChatMessage = require('../models/ChatMessage');
+const User = require('../models/User');
+
+// Firebase authentication middleware
+const authenticateFirebase = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const user = await User.findOne({ email: decodedToken.email }).select('-password');
+    
+    if (!user) {
+      return res.status(403).json({ message: 'User not found' });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(403).json({ message: 'Invalid token' });
+  }
+};
 
 // Get chat messages for a group or event
-router.get('/messages/:chatType/:chatId', auth, async (req, res) => {
+router.get('/messages/:chatType/:chatId', authenticateFirebase, async (req, res) => {
   try {
     const { chatType, chatId } = req.params;
     const { page = 1, limit = 50 } = req.query;
@@ -40,7 +65,7 @@ router.get('/messages/:chatType/:chatId', auth, async (req, res) => {
 });
 
 // Mark messages as read
-router.post('/mark-read', auth, async (req, res) => {
+router.post('/mark-read', authenticateFirebase, async (req, res) => {
   try {
     const { chatType, chatId, messageIds } = req.body;
 
@@ -49,12 +74,12 @@ router.post('/mark-read', auth, async (req, res) => {
         _id: { $in: messageIds },
         chatType,
         chatId,
-        'readBy.user': { $ne: req.user.id }
+        'readBy.user': { $ne: req.user._id }
       },
       {
         $push: {
           readBy: {
-            user: req.user.id,
+            user: req.user._id,
             readAt: new Date()
           }
         }
@@ -69,7 +94,7 @@ router.post('/mark-read', auth, async (req, res) => {
 });
 
 // Delete a message (only sender can delete)
-router.delete('/messages/:messageId', auth, async (req, res) => {
+router.delete('/messages/:messageId', authenticateFirebase, async (req, res) => {
   try {
     const message = await ChatMessage.findById(req.params.messageId);
     
@@ -77,7 +102,7 @@ router.delete('/messages/:messageId', auth, async (req, res) => {
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    if (message.sender.toString() !== req.user.id) {
+    if (message.sender.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to delete this message' });
     }
 
@@ -93,7 +118,7 @@ router.delete('/messages/:messageId', auth, async (req, res) => {
 });
 
 // Edit a message (only sender can edit)
-router.put('/messages/:messageId', auth, async (req, res) => {
+router.put('/messages/:messageId', authenticateFirebase, async (req, res) => {
   try {
     const { content } = req.body;
     const message = await ChatMessage.findById(req.params.messageId);
@@ -102,7 +127,7 @@ router.put('/messages/:messageId', auth, async (req, res) => {
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    if (message.sender.toString() !== req.user.id) {
+    if (message.sender.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to edit this message' });
     }
 
@@ -121,7 +146,7 @@ router.put('/messages/:messageId', auth, async (req, res) => {
 });
 
 // Add reaction to message
-router.post('/messages/:messageId/reactions', auth, async (req, res) => {
+router.post('/messages/:messageId/reactions', authenticateFirebase, async (req, res) => {
   try {
     const { emoji } = req.body;
     const message = await ChatMessage.findById(req.params.messageId);
@@ -132,12 +157,12 @@ router.post('/messages/:messageId/reactions', auth, async (req, res) => {
 
     // Remove existing reaction from this user
     message.reactions = message.reactions.filter(
-      reaction => reaction.user.toString() !== req.user.id
+      reaction => reaction.user.toString() !== req.user._id.toString()
     );
 
     // Add new reaction
     message.reactions.push({
-      user: req.user.id,
+      user: req.user._id,
       emoji,
       createdAt: new Date()
     });
@@ -153,7 +178,7 @@ router.post('/messages/:messageId/reactions', auth, async (req, res) => {
 });
 
 // Remove reaction from message
-router.delete('/messages/:messageId/reactions', auth, async (req, res) => {
+router.delete('/messages/:messageId/reactions', authenticateFirebase, async (req, res) => {
   try {
     const message = await ChatMessage.findById(req.params.messageId);
     
@@ -163,7 +188,7 @@ router.delete('/messages/:messageId/reactions', auth, async (req, res) => {
 
     // Remove reaction from this user
     message.reactions = message.reactions.filter(
-      reaction => reaction.user.toString() !== req.user.id
+      reaction => reaction.user.toString() !== req.user._id.toString()
     );
 
     await message.save();

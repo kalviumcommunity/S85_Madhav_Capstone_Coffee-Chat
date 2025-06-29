@@ -6,10 +6,12 @@ const {
   getEventAttendees, 
   getUserEvents,
   createEvent, 
+  rsvpToEvent,
   joinEvent, 
   leaveEvent,
   updateEvent, 
-  deleteEvent 
+  deleteEvent,
+  bookmarkEvent
 } = require('../controllers/eventController');
 const auth = require('../middleware/auth');
 
@@ -44,10 +46,18 @@ router.get('/:id/attendees', getEventAttendees);
 
 // Protected routes
 router.get('/user/events', auth, getUserEvents);
+
+// Event management
 router.post('/', auth, createEvent);
-router.post('/:id/join', auth, joinEvent);
-router.post('/:id/leave', auth, leaveEvent);
 router.put('/:id', auth, updateEvent);
 router.delete('/:id', auth, deleteEvent);
+
+// RSVP and attendance
+router.post('/:id/rsvp', auth, rsvpToEvent);
+router.post('/:id/join', auth, joinEvent);
+router.post('/:id/leave', auth, leaveEvent);
+
+// Bookmark/Unbookmark event
+router.post('/:id/bookmark', auth, bookmarkEvent);
 
 module.exports = router;

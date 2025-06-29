@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./middleware/db');
 const { initializeSocket } = require('./config/socket');
+require('./firebaseAdmin'); // Initialize Firebase Admin
 
 // Import routes
 const userRoutes = require('./routes/userRoutes');
@@ -31,13 +32,6 @@ const corsOptions = {
 // Middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
-
-// Add security headers to fix Firebase Auth COOP issue
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-  next();
-});
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

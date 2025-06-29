@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../Components/Navbar/Navbar';
+import Chat from '../../Components/Chat/Chat';
 import { 
   MapPin, 
   Users, 
@@ -15,10 +16,13 @@ import {
   MoreHorizontal,
   ArrowLeft,
   Edit,
-  Trash2
+  Trash2,
+  Unlock,
+  Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './GroupDetails.css';
+import { Link } from 'react-router-dom';
 
 const GroupDetails = ({ user, setUser }) => {
   const { id } = useParams();
@@ -29,9 +33,6 @@ const GroupDetails = ({ user, setUser }) => {
   const [isCreator, setIsCreator] = useState(false);
   const [activeTab, setActiveTab] = useState('about');
   const [members, setMembers] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -180,53 +181,49 @@ const GroupDetails = ({ user, setUser }) => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
-
-    setSendingMessage(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/chat/groups/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          content: newMessage,
-          type: 'text'
-        })
-      });
-
-      if (response.ok) {
-        const messageData = await response.json();
-        setMessages([...messages, messageData]);
-        setNewMessage('');
-        toast.success('Message sent!');
-      } else {
-        const error = await response.json();
-        toast.error(error.message || 'Failed to send message');
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: group?.name,
+          text: group?.description,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
-    } finally {
-      setSendingMessage(false);
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        toast.success('Group link copied to clipboard!');
+      }).catch(() => {
+        toast.error('Failed to copy link');
+      });
     }
   };
 
   const handleBookmark = async () => {
+    if (!user) {
+      toast.error('Please log in to bookmark groups');
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/groups/${id}/bookmark`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${group._id}/bookmark`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
 
       if (response.ok) {
-        toast.success('Group bookmarked!');
+        const data = await response.json();
+        setGroup(prev => ({
+          ...prev,
+          isBookmarked: data.isBookmarked
+        }));
+        toast.success(data.isBookmarked ? 'Group bookmarked!' : 'Group removed from bookmarks');
       } else {
         toast.error('Failed to bookmark group');
       }
@@ -246,10 +243,14 @@ const GroupDetails = ({ user, setUser }) => {
     return (
       <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
         <Navbar user={user} setUser={setUser} />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-            <p className="text-secondary-600 dark:text-secondary-300">Loading group details...</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse">
+            <div className="bg-secondary-200 dark:bg-secondary-700 h-8 rounded w-1/3 mb-4"></div>
+            <div className="bg-secondary-200 dark:bg-secondary-700 h-64 rounded-lg mb-6"></div>
+            <div className="space-y-4">
+              <div className="bg-secondary-200 dark:bg-secondary-700 h-4 rounded w-3/4"></div>
+              <div className="bg-secondary-200 dark:bg-secondary-700 h-4 rounded w-1/2"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -260,304 +261,383 @@ const GroupDetails = ({ user, setUser }) => {
     return (
       <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
         <Navbar user={user} setUser={setUser} />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="text-secondary-600 dark:text-secondary-300">Group not found</p>
-            <button
-              onClick={() => navigate('/groups')}
-              className="btn-primary mt-4"
-            >
-              Back to Groups
-            </button>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+          <h1 className="text-2xl font-bold text-secondary-900 dark:text-white mb-4">
+            Group not found
+          </h1>
+          <Link to="/groups" className="btn-primary">
+            Back to Groups
+          </Link>
         </div>
       </div>
     );
   }
 
+  const memberCount = group.memberCount || group.members?.length || 0;
+
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
       <Navbar user={user} setUser={setUser} />
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/groups')}
-          className="flex items-center space-x-2 text-secondary-600 dark:text-secondary-300 hover:text-primary-600 transition-colors duration-200 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Groups</span>
-        </button>
-
-        {/* Group Header */}
-        <div className="card mb-8">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Group Image */}
-            <div className="lg:w-1/3">
-              <img
-                src={group.image || 'https://via.placeholder.com/400x300'}
-                alt={group.name}
-                className="w-full h-64 lg:h-48 object-cover rounded-lg"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/400x300';
-                }}
-              />
-            </div>
-
-            {/* Group Info */}
-            <div className="lg:w-2/3">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-secondary-900 dark:text-white mb-2">
-                    {group.name}
-                  </h1>
-                  <div className="flex items-center space-x-4 text-secondary-600 dark:text-secondary-300 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-4 h-4" />
-                      <span>{group.city}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Users className="w-4 h-4" />
-                      <span>{members.length} members</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  {isCreator && (
-                    <>
-                      <button
-                        onClick={() => setShowEditModal(true)}
-                        className="p-2 text-secondary-400 hover:text-primary-600 transition-colors duration-200"
-                        title="Edit Group"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => setShowDeleteModal(true)}
-                        className="p-2 text-secondary-400 hover:text-red-600 transition-colors duration-200"
-                        title="Delete Group"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </>
-                  )}
-                  <button
-                    onClick={handleBookmark}
-                    className="p-2 text-secondary-400 hover:text-primary-600 transition-colors duration-200"
-                  >
-                    <Bookmark className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-secondary-400 hover:text-primary-600 transition-colors duration-200">
-                    <Share2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <p className="text-secondary-700 dark:text-secondary-300 mb-6">
-                {group.description}
-              </p>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate('/groups')}
+              className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors duration-200"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-secondary-900 dark:text-white">
+                {group.name}
+              </h1>
+              <div className="flex items-center space-x-2 mt-2">
+                <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-medium shadow-sm">
                   {group.category}
                 </span>
-                <span className="px-3 py-1 bg-secondary-100 text-secondary-700 rounded-full text-sm font-medium capitalize">
-                  {group.privacy}
+                <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm ${
+                  group.privacy === 'Public' 
+                    ? 'bg-green-100 text-green-700 border border-green-200' 
+                    : 'bg-red-100 text-red-700 border border-red-200'
+                }`}>
+                  {group.privacy === 'Public' ? '🔓 Public' : '🔒 Private'}
                 </span>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                {!isMember ? (
-                  <button
-                    onClick={handleJoinGroup}
-                    className="btn-primary flex items-center justify-center space-x-2"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>Join Group</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleLeaveGroup}
-                    className="btn-outline flex items-center justify-center space-x-2"
-                  >
-                    <span>Leave Group</span>
-                  </button>
+                {isMember && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium shadow-sm border border-green-200">
+                    ✅ You're a Member
+                  </span>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Bookmark and Share buttons */}
+            <button
+              onClick={handleBookmark}
+              className={`p-2 rounded-full transition-all duration-200 ${
+                group.isBookmarked 
+                  ? 'bg-primary-600 text-white shadow-lg' 
+                  : 'bg-white/90 dark:bg-secondary-800/90 text-secondary-600 hover:text-primary-600 shadow-lg'
+              }`}
+            >
+              <Bookmark className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-full bg-white/90 dark:bg-secondary-800/90 text-secondary-600 hover:text-secondary-800 dark:hover:text-white shadow-lg transition-all duration-200"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+            
+            {isCreator && (
+              <>
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="btn-outline flex items-center space-x-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="btn-danger flex items-center space-x-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="card">
-          <div className="border-b border-secondary-200 dark:border-secondary-700">
-            <nav className="flex space-x-8">
-              {tabs.map((tab) => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Group Image */}
+            <div className="card p-0 overflow-hidden">
+              <img
+                src={group.image}
+                alt={group.name}
+                className="w-full h-64 object-cover"
+                onError={(e) => {
+                  e.target.src = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=400&fit=crop';
+                }}
+              />
+            </div>
+
+            {/* Tabs */}
+            <div className="card">
+              {/* Tab Navigation */}
+              <div className="flex space-x-1 mb-6 border-b border-secondary-200 dark:border-secondary-700">
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                    activeTab === tab.id
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                  onClick={() => setActiveTab('about')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                    activeTab === 'about'
+                      ? 'text-primary-600 border-b-2 border-primary-600'
+                      : 'text-secondary-500 hover:text-secondary-700 dark:text-secondary-400 dark:hover:text-secondary-300'
                   }`}
                 >
-                  {tab.icon && <tab.icon className="w-4 h-4" />}
-                  <span>{tab.label}</span>
+                  About
                 </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Tab Content */}
-          <div className="py-6">
-            {activeTab === 'about' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-secondary-900 dark:text-white mb-3">
-                    About this group
-                  </h3>
-                  <p className="text-secondary-700 dark:text-secondary-300 leading-relaxed">
-                    {group.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-secondary-900 dark:text-white mb-2">
-                      Group Details
-                    </h4>
-                    <div className="space-y-2 text-sm text-secondary-600 dark:text-secondary-300">
-                      <div className="flex justify-between">
-                        <span>Privacy:</span>
-                        <span className="capitalize">{group.privacy}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Created:</span>
-                        <span>{new Date(group.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Creator:</span>
-                        <span>{group.createdBy.name}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold text-secondary-900 dark:text-white mb-2">
-                      Location
-                    </h4>
-                    <div className="space-y-2 text-sm text-secondary-600 dark:text-secondary-300">
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4" />
-                        <span>{group.city}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  onClick={() => setActiveTab('members')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                    activeTab === 'members'
+                      ? 'text-primary-600 border-b-2 border-primary-600'
+                      : 'text-secondary-500 hover:text-secondary-700 dark:text-secondary-400 dark:hover:text-secondary-300'
+                  }`}
+                >
+                  Members ({memberCount})
+                </button>
+                {isMember && (
+                  <button
+                    onClick={() => setActiveTab('chat')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                      activeTab === 'chat'
+                        ? 'text-primary-600 border-b-2 border-primary-600'
+                        : 'text-secondary-500 hover:text-secondary-700 dark:text-secondary-400 dark:hover:text-secondary-300'
+                    }`}
+                  >
+                    Chat
+                  </button>
+                )}
               </div>
-            )}
 
-            {activeTab === 'members' && (
-              <div>
-                <h3 className="text-lg font-semibold text-secondary-900 dark:text-white mb-6">
-                  Group Members ({members.length})
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {members.map((member) => (
-                    <div key={member._id} className="card flex items-center space-x-3">
-                      <img
-                        src={member.profileImage || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
-                        alt={member.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                        onError={(e) => {
-                          e.target.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                        }}
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-secondary-900 dark:text-white">
-                          {member.name}
-                        </h4>
-                        <p className="text-sm text-secondary-600 dark:text-secondary-300">
-                          {member.location || 'No location'}
-                        </p>
-                      </div>
-                      {member._id === group.createdBy._id && (
-                        <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
-                          Creator
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'chat' && (
-              <div className="h-96 flex flex-col">
-                <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-                  {messages.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageCircle className="w-12 h-12 text-secondary-400 mx-auto mb-4" />
-                      <p className="text-secondary-600 dark:text-secondary-300">
-                        No messages yet. Start the conversation!
+              {/* Tab Content */}
+              <div className="min-h-[400px]">
+                {activeTab === 'about' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-xl font-semibold text-secondary-900 dark:text-white mb-3">
+                        About This Group
+                      </h2>
+                      <p className="text-secondary-700 dark:text-secondary-300 leading-relaxed whitespace-pre-wrap">
+                        {group.description}
                       </p>
                     </div>
-                  ) : (
-                    messages.map((message) => (
-                      <div
-                        key={message._id}
-                        className={`flex ${message.sender._id === user?._id ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.sender._id === user?._id
-                              ? 'bg-primary-600 text-white'
-                              : 'bg-secondary-200 dark:bg-secondary-700 text-secondary-900 dark:text-white'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="text-sm font-medium">
-                              {message.sender.name}
-                            </span>
-                            <span className="text-xs opacity-75">
-                              {new Date(message.createdAt).toLocaleTimeString()}
-                            </span>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-3">
+                          <MapPin className="w-5 h-5 text-primary-600" />
+                          <div>
+                            <p className="text-sm text-secondary-500 dark:text-secondary-400">Location</p>
+                            <p className="font-medium text-secondary-900 dark:text-white">
+                              {group.city}
+                            </p>
                           </div>
-                          <p className="text-sm">{message.content}</p>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                          <Users className="w-5 h-5 text-primary-600" />
+                          <div>
+                            <p className="text-sm text-secondary-500 dark:text-secondary-400">Members</p>
+                            <p className="font-medium text-secondary-900 dark:text-white">
+                              {memberCount} people
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                      
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-3">
+                          <Calendar className="w-5 h-5 text-primary-600" />
+                          <div>
+                            <p className="text-sm text-secondary-500 dark:text-secondary-400">Created</p>
+                            <p className="font-medium text-secondary-900 dark:text-white">
+                              {new Date(group.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            {group.privacy === 'Public' ? (
+                              <Unlock className="w-5 h-5 text-green-600" />
+                            ) : (
+                              <Lock className="w-5 h-5 text-red-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm text-secondary-500 dark:text-secondary-400">Privacy</p>
+                            <p className="font-medium text-secondary-900 dark:text-white">
+                              {group.privacy}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Type a message..."
-                    className="flex-1 input-field"
-                    disabled={!isMember}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!isMember || sendingMessage || !newMessage.trim()}
-                    className="btn-primary px-4"
-                  >
-                    {sendingMessage ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                {activeTab === 'members' && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
+                      Group Members
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {members.map(member => (
+                        <div key={member._id} className="flex items-center space-x-3 p-3 bg-secondary-50 dark:bg-secondary-700 rounded-lg">
+                          <img
+                            src={member.profileImage || 'https://via.placeholder.com/40x40'}
+                            alt={member.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div>
+                            <p className="font-medium text-secondary-900 dark:text-white text-sm">
+                              {member.name}
+                            </p>
+                            <p className="text-xs text-secondary-500 dark:text-secondary-400">
+                              {member._id === group.createdBy._id ? 'Organizer' : 'Member'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'chat' && (isMember || isCreator) && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
+                      Group Chat
+                    </h2>
+                    <div className="h-96">
+                      <Chat 
+                        chatType="group"
+                        chatId={id}
+                        chatName={group.name}
+                        currentUser={user}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8 space-y-6">
+              {/* Join/Leave Section */}
+              {!isCreator && (
+                <div className="bg-white dark:bg-secondary-800 rounded-xl shadow-sm p-6">
+                  <h3 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
+                    Join This Group
+                  </h3>
+                  
+                  {/* Current Status Display */}
+                  <div className="mb-6">
+                    {isMember ? (
+                      <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
+                          <Users className="w-4 h-4 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-green-800 dark:text-green-200">You're a member!</p>
+                          <p className="text-sm text-green-600 dark:text-green-300">You can participate in discussions</p>
+                        </div>
+                      </div>
                     ) : (
-                      <Send className="w-4 h-4" />
+                      <div className="flex items-center space-x-3 p-3 bg-secondary-50 dark:bg-secondary-700 rounded-lg border border-secondary-200 dark:border-secondary-600">
+                        <div className="w-8 h-8 bg-secondary-100 dark:bg-secondary-600 rounded-full flex items-center justify-center">
+                          <Users className="w-4 h-4 text-secondary-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-secondary-800 dark:text-secondary-200">Not a member yet</p>
+                          <p className="text-sm text-secondary-600 dark:text-secondary-400">Join to participate in discussions</p>
+                        </div>
+                      </div>
                     )}
-                  </button>
+                  </div>
+
+                  {/* Join/Leave Button */}
+                  <div className="space-y-3">
+                    {!isMember ? (
+                      <button
+                        onClick={handleJoinGroup}
+                        className="w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-primary-600 hover:bg-primary-700 text-white"
+                      >
+                        <Users className="w-4 h-4 inline mr-2" />
+                        Join Group
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleLeaveGroup}
+                        className="w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-red-500 hover:bg-red-600 text-white"
+                      >
+                        <Users className="w-4 h-4 inline mr-2" />
+                        Leave Group
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Group Stats */}
+              <div className="bg-white dark:bg-secondary-800 rounded-xl shadow-sm p-6">
+                <h3 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
+                  Group Stats
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-secondary-600 dark:text-secondary-400">Members</span>
+                    <span className="font-semibold text-secondary-900 dark:text-white">
+                      {memberCount}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-secondary-600 dark:text-secondary-400">Privacy</span>
+                    <span className="font-semibold text-secondary-900 dark:text-white">
+                      {group.privacy}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-secondary-600 dark:text-secondary-400">Category</span>
+                    <span className="font-semibold text-secondary-900 dark:text-white">
+                      {group.category}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-secondary-600 dark:text-secondary-400">Location</span>
+                    <span className="font-semibold text-secondary-900 dark:text-white">
+                      {group.city}
+                    </span>
+                  </div>
                 </div>
               </div>
-            )}
+
+              {/* Organizer Info */}
+              <div className="bg-white dark:bg-secondary-800 rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-secondary-900 dark:text-white mb-4">
+                  Organized by
+                </h3>
+                
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={group.createdBy.profileImage || 'https://via.placeholder.com/48x48'}
+                    alt={group.createdBy.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-medium text-secondary-900 dark:text-white">
+                      {group.createdBy.name}
+                    </p>
+                    <p className="text-sm text-secondary-500 dark:text-secondary-400">
+                      Group Organizer
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
