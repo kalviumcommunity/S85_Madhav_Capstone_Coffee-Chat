@@ -12,7 +12,8 @@ import {
   Calendar,
   Clock,
   Star,
-  Bookmark
+  Bookmark,
+  Share2
 } from 'lucide-react';
 import { format, isAfter, isBefore, addDays } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -173,15 +174,101 @@ const Events = ({ user, setUser }) => {
       });
 
       if (response.ok) {
-        toast.success(`Successfully marked as ${rsvpType}!`);
-        fetchEvents(); // Refresh events to update attendee count
+        const data = await response.json();
+        toast.success(data.message || `Successfully marked as ${rsvpType}!`);
+        
+        // Update the local state immediately for instant UI feedback
+        setEvents(prevEvents => 
+          prevEvents.map(event => {
+            if (event._id === eventId) {
+              const updatedEvent = { ...event };
+              
+              // Update the RSVP status based on the response
+              if (rsvpType === 'attending') {
+                updatedEvent.isAttending = !event.isAttending;
+                if (updatedEvent.isAttending) {
+                  updatedEvent.isInterested = false;
+                  updatedEvent.isNotAttending = false;
+                }
+              } else if (rsvpType === 'interested') {
+                updatedEvent.isInterested = !event.isInterested;
+                if (updatedEvent.isInterested) {
+                  updatedEvent.isAttending = false;
+                  updatedEvent.isNotAttending = false;
+                }
+              } else if (rsvpType === 'not-attending') {
+                updatedEvent.isNotAttending = true;
+                updatedEvent.isAttending = false;
+                updatedEvent.isInterested = false;
+              } else if (rsvpType === 'not-interested') {
+                updatedEvent.isInterested = false;
+              }
+              
+              return updatedEvent;
+            }
+            return event;
+          })
+        );
       } else {
         const data = await response.json();
-        toast.error(data.error || 'Failed to RSVP');
+        toast.error(data.message || 'Failed to RSVP');
       }
     } catch (error) {
       console.error('Error RSVPing to event:', error);
       toast.error('Failed to RSVP');
+    }
+  };
+
+  const handleJoinEvent = async (eventId) => {
+    if (!user) {
+      toast.error('Please log in to join events');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/events/${eventId}/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(data.message || 'Successfully joined event!');
+        fetchEvents(); // Refresh events to update attendee count
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to join event');
+      }
+    } catch (error) {
+      console.error('Error joining event:', error);
+      toast.error('Failed to join event');
+    }
+  };
+
+  const handleLeaveEvent = async (eventId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/events/${eventId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(data.message || 'Successfully left event');
+        fetchEvents(); // Refresh events to update attendee count
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to leave event');
+      }
+    } catch (error) {
+      console.error('Error leaving event:', error);
+      toast.error('Failed to leave event');
     }
   };
 
@@ -215,6 +302,28 @@ const Events = ({ user, setUser }) => {
     }
   };
 
+  const handleShare = async (event) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: event.name,
+          text: event.description,
+          url: `${window.location.origin}/events/${event._id}`,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      const url = `${window.location.origin}/events/${event._id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success('Event link copied to clipboard!');
+      }).catch(() => {
+        toast.error('Failed to copy link');
+      });
+    }
+  };
+
   const getEventStatus = (eventDate) => {
     const now = new Date();
     const eventDateObj = new Date(eventDate);
@@ -228,29 +337,63 @@ const Events = ({ user, setUser }) => {
     }
   };
 
+  // Helper to get RSVP status
+  const getRSVPStatus = (event) => {
+    if (event.isAttending) return 'attending';
+    if (event.isOnWaitlist) return 'waitlist';
+    if (event.isInterested) return 'interested';
+    if (event.isNotAttending) return 'not-attending';
+    return 'not-rsvped';
+  };
+
   const EventCard = ({ event }) => {
     const eventStatus = getEventStatus(event.date);
-    const isAttending = event.attendees?.some(attendee => attendee._id === user?._id);
-    const isInterested = event.interested?.some(user => user._id === user?._id);
+    const rsvpStatus = getRSVPStatus(event);
     const isBookmarked = user?.bookmarkedEvents?.includes(event._id);
+    const attendeeCount = event.attendeeCount || event.attendees?.length || 0;
 
     return (
-      <div className="card-hover group">
-        <div className="relative mb-4">
+      <div className="card-hover group bg-white dark:bg-secondary-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] border border-secondary-200 dark:border-secondary-700">
+        <div className="relative">
           <img
             src={event.image || 'https://via.placeholder.com/400x200'}
             alt={event.name}
-            className="w-full h-48 object-cover rounded-lg"
+            className="w-full h-48 object-cover rounded-t-xl"
           />
+          
+          {/* Top-left badges */}
           <div className="absolute top-3 left-3 flex space-x-2">
-            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-600">
+            <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-medium shadow-sm">
               {event.category}
             </span>
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full text-white ${eventStatus.color}`}>
+            <span className={`text-xs px-2 py-1 rounded-full text-white font-medium shadow-sm ${eventStatus.color}`}>
               {eventStatus.label}
             </span>
           </div>
-          <div className="absolute top-3 right-3">
+
+          {/* Top-right RSVP status badge */}
+          <div className="absolute top-3 right-3 flex space-x-2">
+            {rsvpStatus === 'attending' && (
+              <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium shadow-sm border border-green-200">
+                ✅ You're In
+              </span>
+            )}
+            {rsvpStatus === 'interested' && (
+              <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-medium shadow-sm border border-blue-200">
+                🤔 Interested
+              </span>
+            )}
+            {rsvpStatus === 'waitlist' && (
+              <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium shadow-sm border border-yellow-200">
+                ⏳ Waitlist
+              </span>
+            )}
+            {rsvpStatus === 'not-attending' && (
+              <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 font-medium shadow-sm border border-red-200">
+                👤 Not RSVPed
+              </span>
+            )}
+            
             <button
               onClick={() => handleBookmark(event._id)}
               className={`p-2 rounded-full transition-colors duration-200 ${
@@ -264,50 +407,86 @@ const Events = ({ user, setUser }) => {
           </div>
         </div>
         
-        <h3 className="text-xl font-semibold text-secondary-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
-          {event.name}
-        </h3>
-        
-        <p className="text-secondary-600 dark:text-secondary-300 mb-3 line-clamp-2">
-          {event.description}
-        </p>
-        
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
-            <Calendar className="w-4 h-4" />
-            <span>{format(new Date(event.date), 'MMM dd, yyyy')}</span>
+        <div className="p-4 space-y-3">
+          <h3 className="text-lg font-semibold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 line-clamp-2">
+            {event.name}
+          </h3>
+          
+          <p className="text-secondary-600 dark:text-secondary-300 text-sm line-clamp-2 leading-relaxed">
+            {event.description}
+          </p>
+          
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
+              <Calendar className="w-4 h-4 opacity-70" />
+              <span className="opacity-80">{format(new Date(event.date), 'MMM dd, yyyy')}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
+              <Clock className="w-4 h-4 opacity-70" />
+              <span className="opacity-80">{event.time?.start || 'TBD'}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
+              <MapPin className="w-4 h-4 opacity-70" />
+              <span className="opacity-80">{event.city}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
+              <Users className="w-4 h-4 opacity-70" />
+              <span className="opacity-80">{attendeeCount} people RSVPed</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
-            <Clock className="w-4 h-4" />
-            <span>{event.time?.start || 'TBD'}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
-            <MapPin className="w-4 h-4" />
-            <span>{event.city}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
-            <Users className="w-4 h-4" />
-            <span>{event.attendeeCount || event.attendees?.length || 0} attending</span>
-          </div>
-        </div>
 
-        <div className="flex space-x-2">
-          <Link
-            to={`/events/${event._id}`}
-            className="flex-1 btn-outline text-center"
-          >
-            View Details
-          </Link>
+          {/* RSVP Toggle Buttons */}
           {eventStatus.status !== 'past' && (
-            <button
-              onClick={() => handleRSVP(event._id, isAttending ? 'not-attending' : 'attending')}
-              className={`flex-1 ${
-                isAttending ? 'btn-secondary' : 'btn-primary'
-              }`}
-            >
-              {isAttending ? 'Cancel RSVP' : 'RSVP'}
-            </button>
+            <div className="space-y-2 pt-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleRSVP(event._id, rsvpStatus === 'attending' ? 'not-attending' : 'attending')}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    rsvpStatus === 'attending' 
+                      ? 'bg-green-500 hover:bg-green-600 text-white' 
+                      : 'bg-primary-600 hover:bg-primary-700 text-white'
+                  }`}
+                >
+                  {rsvpStatus === 'attending' ? (
+                    <>
+                      <span>Not Attend</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Attend</span>
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => handleRSVP(event._id, rsvpStatus === 'interested' ? 'not-interested' : 'interested')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    rsvpStatus === 'interested' 
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                      : 'bg-secondary-100 hover:bg-secondary-200 text-secondary-700 dark:bg-secondary-700 dark:hover:bg-secondary-600 dark:text-secondary-300'
+                  }`}
+                >
+                  {rsvpStatus === 'interested' ? 'Not Interested' : 'Interested'}
+                </button>
+              </div>
+            </div>
           )}
+
+          {/* Action Links */}
+          <div className="flex items-center justify-between pt-2">
+            <Link
+              to={`/events/${event._id}`}
+              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium transition-colors duration-200"
+            >
+              View Details →
+            </Link>
+            <button
+              onClick={() => handleShare(event)}
+              className="text-secondary-500 hover:text-secondary-700 dark:text-secondary-400 dark:hover:text-secondary-300 text-sm font-medium transition-colors duration-200"
+            >
+              Share
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -315,11 +494,12 @@ const Events = ({ user, setUser }) => {
 
   const EventListItem = ({ event }) => {
     const eventStatus = getEventStatus(event.date);
-    const isAttending = event.attendees?.some(attendee => attendee._id === user?._id);
+    const rsvpStatus = getRSVPStatus(event);
     const isBookmarked = user?.bookmarkedEvents?.includes(event._id);
+    const attendeeCount = event.attendeeCount || event.attendees?.length || 0;
 
     return (
-      <div className="card-hover group">
+      <div className="card-hover group bg-white dark:bg-secondary-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-4 border border-secondary-200 dark:border-secondary-700">
         <div className="flex items-center space-x-4">
           <img
             src={event.image || 'https://via.placeholder.com/80x80'}
@@ -328,40 +508,75 @@ const Events = ({ user, setUser }) => {
           />
           
           <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-1">
+            <div className="flex items-center space-x-2 mb-2">
               <h3 className="text-lg font-semibold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                 {event.name}
               </h3>
-              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-600">
+              <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-medium shadow-sm">
                 {event.category}
               </span>
-              <span className={`px-2 py-1 text-xs font-semibold rounded-full text-white ${eventStatus.color}`}>
+              <span className={`text-xs px-2 py-1 rounded-full text-white font-medium shadow-sm ${eventStatus.color}`}>
                 {eventStatus.label}
               </span>
+              {/* RSVP Status Badge */}
+              {rsvpStatus === 'attending' && (
+                <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium shadow-sm border border-green-200">
+                  ✅ You're In
+                </span>
+              )}
             </div>
             
-            <p className="text-secondary-600 dark:text-secondary-300 mb-2 line-clamp-1">
+            <p className="text-secondary-600 dark:text-secondary-300 mb-3 text-sm line-clamp-1">
               {event.description}
             </p>
             
-            <div className="flex items-center space-x-4 text-sm text-secondary-500 dark:text-secondary-400">
+            <div className="flex items-center space-x-4 text-sm text-secondary-500 dark:text-secondary-400 mb-3">
               <div className="flex items-center space-x-1">
-                <Calendar className="w-4 h-4" />
-                <span>{format(new Date(event.date), 'MMM dd, yyyy')}</span>
+                <Calendar className="w-4 h-4 opacity-70" />
+                <span className="opacity-80">{format(new Date(event.date), 'MMM dd, yyyy')}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Clock className="w-4 h-4" />
-                <span>{event.time?.start || 'TBD'}</span>
+                <Clock className="w-4 h-4 opacity-70" />
+                <span className="opacity-80">{event.time?.start || 'TBD'}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <MapPin className="w-4 h-4" />
-                <span>{event.city}</span>
+                <MapPin className="w-4 h-4 opacity-70" />
+                <span className="opacity-80">{event.city}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Users className="w-4 h-4" />
-                <span>{event.attendeeCount || event.attendees?.length || 0} attending</span>
+                <Users className="w-4 h-4 opacity-70" />
+                <span className="opacity-80">{attendeeCount} people RSVPed</span>
               </div>
             </div>
+
+            {/* RSVP Toggle Buttons for List View */}
+            {eventStatus.status !== 'past' && (
+              <div className="space-y-2 mb-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleRSVP(event._id, rsvpStatus === 'attending' ? 'not-attending' : 'attending')}
+                    className={`px-3 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                      rsvpStatus === 'attending' 
+                        ? 'bg-green-500 hover:bg-green-600 text-white' 
+                        : 'bg-primary-600 hover:bg-primary-700 text-white'
+                    }`}
+                  >
+                    {rsvpStatus === 'attending' ? 'Not Attend' : 'Attend'}
+                  </button>
+                  
+                  <button
+                    onClick={() => handleRSVP(event._id, rsvpStatus === 'interested' ? 'not-interested' : 'interested')}
+                    className={`px-3 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                      rsvpStatus === 'interested' 
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                        : 'bg-secondary-100 hover:bg-secondary-200 text-secondary-700 dark:bg-secondary-700 dark:hover:bg-secondary-600 dark:text-secondary-300'
+                    }`}
+                  >
+                    {rsvpStatus === 'interested' ? 'Not Interested' : 'Interested'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center space-x-2">
@@ -375,22 +590,18 @@ const Events = ({ user, setUser }) => {
             >
               <Bookmark className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => handleShare(event)}
+              className="p-2 rounded-full text-secondary-400 hover:text-secondary-600 transition-colors duration-200"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
             <Link
               to={`/events/${event._id}`}
-              className="btn-outline"
+              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium transition-colors duration-200"
             >
-              View Details
+              View Details →
             </Link>
-            {eventStatus.status !== 'past' && (
-              <button
-                onClick={() => handleRSVP(event._id, isAttending ? 'not-attending' : 'attending')}
-                className={`${
-                  isAttending ? 'btn-secondary' : 'btn-primary'
-                }`}
-              >
-                {isAttending ? 'Cancel RSVP' : 'RSVP'}
-              </button>
-            )}
           </div>
         </div>
       </div>

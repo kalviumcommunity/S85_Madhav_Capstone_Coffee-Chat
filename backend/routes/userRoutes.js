@@ -14,6 +14,11 @@ router.post('/signup', registerUser); // Keep both for compatibility
 
 router.post('/login', loginUser);
 router.post('/google-login', googleLogin);
+router.post('/logout', authenticateJWT, (req, res) => {
+  // Server-side logout - just return success
+  // The actual token invalidation happens on the client side
+  res.json({ message: 'Logout successful' });
+});
 router.get('/profile', authenticateJWT, getProfile);
 router.put('/profile', authenticateJWT, updateProfile);
 router.post('/upload-profile-image', authenticateJWT, upload.single('profileImage'), uploadProfileImage);

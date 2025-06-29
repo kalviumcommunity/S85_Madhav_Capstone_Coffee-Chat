@@ -10,7 +10,12 @@ import {
   Grid, 
   List,
   Calendar,
-  Star
+  Star,
+  Bookmark,
+  Share2,
+  Lock,
+  Unlock,
+  ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './Groups.css';
@@ -124,73 +129,165 @@ const Groups = ({ user, setUser }) => {
     }
   };
 
+  const handleShare = async (group) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: group.name,
+          text: group.description,
+          url: `${window.location.origin}/groups/${group._id}`,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      const url = `${window.location.origin}/groups/${group._id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success('Group link copied to clipboard!');
+      }).catch(() => {
+        toast.error('Failed to copy link');
+      });
+    }
+  };
+
+  const handleBookmark = async (groupId) => {
+    if (!user) {
+      toast.error('Please log in to bookmark groups');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setGroups(prev => prev.map(group => 
+          group._id === groupId 
+            ? { ...group, isBookmarked: data.isBookmarked }
+            : group
+        ));
+        toast.success(data.isBookmarked ? 'Group bookmarked!' : 'Group removed from bookmarks');
+      } else {
+        toast.error('Failed to bookmark group');
+      }
+    } catch (error) {
+      console.error('Error bookmarking group:', error);
+      toast.error('Failed to bookmark group');
+    }
+  };
+
   const GroupCard = ({ group }) => {
     const isMember = group.isMember || group.members?.some(member => member._id === user?._id);
+    const isBookmarked = group.isBookmarked || user?.bookmarkedGroups?.includes(group._id);
+    const memberCount = group.memberCount || group.members?.length || 0;
     
     return (
-      <div className="card-hover group">
-        <div className="relative mb-4">
+      <div className="card-hover group bg-white dark:bg-secondary-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] border border-secondary-200 dark:border-secondary-700">
+        <div className="relative">
           <img
             src={group.image || 'https://via.placeholder.com/400x200'}
             alt={group.name}
-            className="w-full h-48 object-cover rounded-lg"
+            className="w-full h-48 object-cover rounded-t-xl"
             onError={(e) => {
               e.target.src = 'https://via.placeholder.com/400x200';
             }}
           />
-          <div className="absolute top-3 left-3">
-            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-600">
+          
+          {/* Top-left badges */}
+          <div className="absolute top-3 left-3 flex space-x-2">
+            <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-medium shadow-sm">
               {group.category}
             </span>
           </div>
-          <div className="absolute top-3 right-3">
-            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-white/90 dark:bg-secondary-800/90 text-secondary-900 dark:text-white">
-              {group.privacy}
-            </span>
-          </div>
-        </div>
-        
-        <h3 className="text-xl font-semibold text-secondary-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
-          {group.name}
-        </h3>
-        
-        <p className="text-secondary-600 dark:text-secondary-300 mb-3 line-clamp-2">
-          {group.description}
-        </p>
-        
-        <div className="flex items-center justify-between text-sm text-secondary-500 dark:text-secondary-400 mb-4">
-          <div className="flex items-center space-x-1">
-            <MapPin className="w-4 h-4" />
-            <span>{group.city}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Users className="w-4 h-4" />
-            <span>{group.memberCount || group.members?.length || 0} members</span>
-          </div>
-        </div>
 
-        <div className="flex space-x-2">
-          <Link
-            to={`/groups/${group._id}`}
-            className="flex-1 btn-outline text-center"
-          >
-            View Details
-          </Link>
+          {/* Top-right badges */}
+          <div className="absolute top-3 right-3 flex space-x-2">
+            {/* Privacy Badge */}
+            <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm ${
+              group.privacy === 'Public' 
+                ? 'bg-green-100 text-green-700 border border-green-200' 
+                : 'bg-red-100 text-red-700 border border-red-200'
+            }`}>
+              {group.privacy === 'Public' ? '🔓 Public' : '🔒 Private'}
+            </span>
+            
+            {/* Bookmark Button */}
+            <button
+              onClick={() => handleBookmark(group._id)}
+              className={`p-2 rounded-full transition-colors duration-200 ${
+                isBookmarked 
+                  ? 'bg-primary-600 text-white' 
+                  : 'bg-white/90 dark:bg-secondary-800/90 text-secondary-600 hover:text-primary-600'
+              }`}
+            >
+              <Bookmark className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-3">
+          <h3 className="text-lg font-semibold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 line-clamp-2">
+            {group.name}
+          </h3>
+          
+          <p className="text-secondary-600 dark:text-secondary-300 text-sm line-clamp-2 leading-relaxed">
+            {group.description}
+          </p>
+          
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
+              <MapPin className="w-4 h-4 opacity-70" />
+              <span className="opacity-80">{group.city}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
+              <Users className="w-4 h-4 opacity-70" />
+              <span className="opacity-80">{memberCount} members</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-secondary-500 dark:text-secondary-400">
+              <Calendar className="w-4 h-4 opacity-70" />
+              <span className="opacity-80">Created {new Date(group.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+
+          {/* Join/Leave Button */}
           {!isMember ? (
             <button
               onClick={() => handleJoinGroup(group._id)}
-              className="flex-1 btn-primary"
+              className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-primary-600 hover:bg-primary-700 text-white"
             >
               Join Group
             </button>
           ) : (
             <button
-              className="flex-1 btn-secondary"
+              className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-green-500 text-white cursor-default"
               disabled
             >
-              Joined
+              Joined ✓
             </button>
           )}
+
+          {/* Action Links */}
+          <div className="flex items-center justify-between pt-2">
+            <Link
+              to={`/groups/${group._id}`}
+              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium transition-colors duration-200"
+            >
+              View Details →
+            </Link>
+            <button
+              onClick={() => handleShare(group)}
+              className="text-secondary-500 hover:text-secondary-700 dark:text-secondary-400 dark:hover:text-secondary-300 text-sm font-medium transition-colors duration-200"
+            >
+              Share
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -198,9 +295,11 @@ const Groups = ({ user, setUser }) => {
 
   const GroupListItem = ({ group }) => {
     const isMember = group.isMember || group.members?.some(member => member._id === user?._id);
+    const isBookmarked = group.isBookmarked || user?.bookmarkedGroups?.includes(group._id);
+    const memberCount = group.memberCount || group.members?.length || 0;
     
     return (
-      <div className="card-hover group">
+      <div className="card-hover group bg-white dark:bg-secondary-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-4 border border-secondary-200 dark:border-secondary-700">
         <div className="flex items-center space-x-4">
           <img
             src={group.image || 'https://via.placeholder.com/80x80'}
@@ -212,57 +311,82 @@ const Groups = ({ user, setUser }) => {
           />
           
           <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-1">
+            <div className="flex items-center space-x-2 mb-2">
               <h3 className="text-lg font-semibold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                 {group.name}
               </h3>
-              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-600">
+              <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-medium shadow-sm">
                 {group.category}
+              </span>
+              <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm ${
+                group.privacy === 'Public' 
+                  ? 'bg-green-100 text-green-700 border border-green-200' 
+                  : 'bg-red-100 text-red-700 border border-red-200'
+              }`}>
+                {group.privacy === 'Public' ? '🔓 Public' : '🔒 Private'}
               </span>
             </div>
             
-            <p className="text-secondary-600 dark:text-secondary-300 mb-2 line-clamp-1">
+            <p className="text-secondary-600 dark:text-secondary-300 mb-3 text-sm line-clamp-1">
               {group.description}
             </p>
             
             <div className="flex items-center space-x-4 text-sm text-secondary-500 dark:text-secondary-400">
               <div className="flex items-center space-x-1">
-                <MapPin className="w-4 h-4" />
-                <span>{group.city}</span>
+                <MapPin className="w-4 h-4 opacity-70" />
+                <span className="opacity-80">{group.city}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Users className="w-4 h-4" />
-                <span>{group.memberCount || group.members?.length || 0} members</span>
+                <Users className="w-4 h-4 opacity-70" />
+                <span className="opacity-80">{memberCount} members</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Calendar className="w-4 h-4" />
-                <span>{new Date(group.createdAt).toLocaleDateString()}</span>
+                <Calendar className="w-4 h-4 opacity-70" />
+                <span className="opacity-80">{new Date(group.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Link
-              to={`/groups/${group._id}`}
-              className="btn-outline"
-            >
-              View Details
-            </Link>
+
+            {/* Join/Leave Button for List View */}
             {!isMember ? (
               <button
                 onClick={() => handleJoinGroup(group._id)}
-                className="btn-primary"
+                className="px-3 py-1 rounded text-xs font-medium transition-all duration-200 bg-primary-600 hover:bg-primary-700 text-white mt-2"
               >
                 Join Group
               </button>
             ) : (
               <button
-                className="btn-secondary"
+                className="px-3 py-1 rounded text-xs font-medium transition-all duration-200 bg-green-500 text-white cursor-default mt-2"
                 disabled
               >
-                Joined
+                Joined ✓
               </button>
             )}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handleBookmark(group._id)}
+              className={`p-2 rounded-full transition-colors duration-200 ${
+                isBookmarked 
+                  ? 'bg-primary-600 text-white' 
+                  : 'text-secondary-400 hover:text-primary-600'
+              }`}
+            >
+              <Bookmark className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleShare(group)}
+              className="p-2 rounded-full text-secondary-400 hover:text-secondary-600 transition-colors duration-200"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            <Link
+              to={`/groups/${group._id}`}
+              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium transition-colors duration-200"
+            >
+              View Details →
+            </Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../Components/Navbar/Navbar';
 import { 
@@ -14,6 +14,7 @@ import {
   Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { FiCamera, FiLoader } from 'react-icons/fi';
 
 const Profile = ({ user, setUser }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -23,6 +24,9 @@ const Profile = ({ user, setUser }) => {
   const [bookmarkedEvents, setBookmarkedEvents] = useState([]);
   const [activeTab, setActiveTab] = useState('groups');
   const navigate = useNavigate();
+  const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef();
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -91,10 +95,23 @@ const Profile = ({ user, setUser }) => {
     }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+      setUploading(true);
+      uploadProfileImage(file)
+        .then(() => {
+          toast.success('Profile image updated!');
+        })
+        .catch(() => {
+          toast.error('Failed to upload image');
+        })
+        .finally(() => setUploading(false));
+    }
+  };
 
+  const uploadProfileImage = async (file) => {
     const formData = new FormData();
     formData.append('profileImage', file);
 
@@ -111,13 +128,12 @@ const Profile = ({ user, setUser }) => {
       if (response.ok) {
         const data = await response.json();
         setUser({ ...user, profileImage: data.profileImage });
-        toast.success('Profile image updated!');
       } else {
-        toast.error('Failed to upload image');
+        throw new Error('Failed to upload image');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      throw error;
     }
   };
 
@@ -150,21 +166,27 @@ const Profile = ({ user, setUser }) => {
         <div className="card mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
             {/* Profile Image */}
-            <div className="relative">
+            <div className="relative group w-32 h-32 mb-4">
               <img
-                src={user.profileImage || 'https://cdn-icons-png.flaticon.com/128/847/847969.png'}
+                src={preview || user.profileImage || 'https://cdn-icons-png.flaticon.com/128/847/847969.png'}
                 alt={user.name}
-                className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white dark:border-secondary-700 shadow-lg"
+                className="w-32 h-32 rounded-full object-cover border-4 border-orange-200 shadow-lg transition-all duration-200"
               />
-              <label className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full cursor-pointer hover:bg-primary-700 transition-colors duration-200">
-                <Camera className="w-4 h-4" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </label>
+              <button
+                type="button"
+                className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-full shadow-lg opacity-90 group-hover:opacity-100 transition"
+                onClick={() => fileInputRef.current.click()}
+                aria-label="Change profile picture"
+              >
+                {uploading ? <FiLoader className="animate-spin" /> : <FiCamera />}
+              </button>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+              />
             </div>
 
             {/* Profile Info */}

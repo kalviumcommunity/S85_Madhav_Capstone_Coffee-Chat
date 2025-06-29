@@ -1,128 +1,76 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { io } from 'socket.io-client';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
+import { useChat } from '../../hooks/useChat';
 import './Chat.css';
 
 const Chat = ({ chatType, chatId, chatName, currentUser }) => {
-  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [typingUsers, setTypingUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [firebaseToken, setFirebaseToken] = useState('');
+  const [backendToken, setBackendToken] = useState('');
+  const [firebaseUser, setFirebaseUser] = useState(null);
   
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Scroll to bottom of messages
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Initialize WebSocket connection
+  // Get Firebase user directly
   useEffect(() => {
     const auth = getAuth();
-    const user = auth.currentUser;
-    
-    if (!user) return;
-
-    // Get JWT token
-    user.getIdToken().then(token => {
-      const newSocket = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000', {
-        auth: { token }
-      });
-
-      newSocket.on('connect', () => {
-        console.log('Connected to chat server');
-        setIsConnected(true);
-        
-        // Join the specific chat room
-        if (chatType === 'group') {
-          newSocket.emit('join-group-chat', chatId);
-        } else if (chatType === 'event') {
-          newSocket.emit('join-event-chat', chatId);
-        }
-      });
-
-      newSocket.on('disconnect', () => {
-        console.log('Disconnected from chat server');
-        setIsConnected(false);
-      });
-
-      newSocket.on('new-group-message', (data) => {
-        if (data.groupId === chatId) {
-          setMessages(prev => [...prev, data.message]);
-          scrollToBottom();
-        }
-      });
-
-      newSocket.on('new-event-message', (data) => {
-        if (data.eventId === chatId) {
-          setMessages(prev => [...prev, data.message]);
-          scrollToBottom();
-        }
-      });
-
-      newSocket.on('user-typing', (data) => {
-        if (data.userId !== currentUser?.uid) {
-          setTypingUsers(prev => {
-            const filtered = prev.filter(user => user.userId !== data.userId);
-            if (data.isTyping) {
-              return [...filtered, { userId: data.userId, userName: data.userName }];
-            }
-            return filtered;
-          });
-        }
-      });
-
-      newSocket.on('messages-read', (data) => {
-        // Update read status for messages
-        setMessages(prev => prev.map(msg => {
-          if (data.messageIds.includes(msg._id)) {
-            const readBy = msg.readBy || [];
-            if (!readBy.find(read => read.user === data.userId)) {
-              return {
-                ...msg,
-                readBy: [...readBy, { user: data.userId, readAt: new Date() }]
-              };
-            }
-          }
-          return msg;
-        }));
-      });
-
-      newSocket.on('message-error', (data) => {
-        console.error('Message error:', data.error);
-        // You can show a toast notification here
-      });
-
-      setSocket(newSocket);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setFirebaseUser(user);
+      console.log('[Chat] Firebase user:', user ? { uid: user.uid, email: user.email } : 'null');
+      console.log('[Chat] currentUser prop:', currentUser ? { id: currentUser._id, name: currentUser.name } : 'null');
     });
+    return () => unsubscribe();
+  }, [currentUser]);
 
-    return () => {
-      if (newSocket) {
-        newSocket.disconnect();
-      }
-    };
-  }, [chatId, chatType, currentUser]);
+  // Use the custom chat hook with Firebase user
+  const {
+    messages,
+    isConnected,
+    typingUsers,
+    isLoading,
+    hasMore,
+    isLoadingMore,
+    pendingMessages,
+    connectionAttempts,
+    error,
+    sendMessage,
+    loadMoreMessages,
+    startTyping,
+    stopTyping
+  } = useChat(chatType, chatId, firebaseUser);
 
-  // Load initial messages
-  useEffect(() => {
-    loadMessages();
-  }, [chatId, chatType]);
+  // Optimized scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, []);
 
-  // Load more messages when scrolling up
+  // Save scroll position
+  const saveScrollPosition = useCallback(() => {
+    if (chatContainerRef.current) {
+      setScrollPosition(chatContainerRef.current.scrollTop);
+    }
+  }, []);
+
+  // Restore scroll position
+  const restoreScrollPosition = useCallback(() => {
+    if (chatContainerRef.current && scrollPosition > 0) {
+      chatContainerRef.current.scrollTop = scrollPosition;
+    }
+  }, [scrollPosition]);
+
+  // Handle scroll for loading more messages
   useEffect(() => {
     const handleScroll = () => {
       if (chatContainerRef.current) {
         const { scrollTop } = chatContainerRef.current;
         if (scrollTop === 0 && hasMore && !isLoadingMore) {
+          saveScrollPosition();
           loadMoreMessages();
         }
       }
@@ -130,113 +78,66 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
 
     const container = chatContainerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
+      container.addEventListener('scroll', handleScroll, { passive: true });
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [hasMore, isLoadingMore]);
+  }, [hasMore, isLoadingMore, saveScrollPosition, loadMoreMessages]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const loadMessages = async () => {
-    try {
-      setIsLoading(true);
-      const auth = getAuth();
-      const token = await auth.currentUser?.getIdToken();
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      const isOwnMessage = lastMessage.sender?._id === currentUser?._id;
+      const isNearBottom = chatContainerRef.current && 
+        (chatContainerRef.current.scrollHeight - chatContainerRef.current.scrollTop - chatContainerRef.current.clientHeight) < 100;
       
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'}/api/chat/messages/${chatType}/${chatId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      setMessages(response.data.messages);
-      setHasMore(response.data.currentPage < response.data.totalPages);
-      setPage(response.data.currentPage);
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadMoreMessages = async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    try {
-      setIsLoadingMore(true);
-      const auth = getAuth();
-      const token = await auth.currentUser?.getIdToken();
-      
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'}/api/chat/messages/${chatType}/${chatId}?page=${page + 1}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      setMessages(prev => [...response.data.messages, ...prev]);
-      setHasMore(response.data.currentPage < response.data.totalPages);
-      setPage(response.data.currentPage);
-    } catch (error) {
-      console.error('Error loading more messages:', error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
-
-  const sendMessage = async (content, messageType = 'text', mediaUrl = null, fileName = null, fileSize = null) => {
-    if (!content.trim() && !mediaUrl) return;
-
-    try {
-      const messageData = {
-        content: content.trim(),
-        messageType,
-        mediaUrl,
-        fileName,
-        fileSize
-      };
-
-      if (chatType === 'group') {
-        messageData.groupId = chatId;
-        socket.emit('group-message', messageData);
-      } else if (chatType === 'event') {
-        messageData.eventId = chatId;
-        socket.emit('event-message', messageData);
+      if (isOwnMessage || isNearBottom) {
+        scrollToBottom();
       }
-
-      setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
     }
-  };
+  }, [messages, currentUser, scrollToBottom]);
+
+  // Restore scroll position after loading more messages
+  useEffect(() => {
+    if (!isLoadingMore && scrollPosition > 0) {
+      restoreScrollPosition();
+    }
+  }, [isLoadingMore, restoreScrollPosition]);
+
+  useEffect(() => {
+    const getTokens = async () => {
+      try {
+        if (firebaseUser) {
+          const token = await firebaseUser.getIdToken();
+          setFirebaseToken(token?.slice(0, 10));
+        } else {
+          setFirebaseToken('');
+        }
+        const backend = localStorage.getItem('token');
+        setBackendToken(backend ? backend.slice(0, 10) : '');
+      } catch (error) {
+        console.error('[Chat] Error getting tokens:', error);
+        setFirebaseToken('ERROR');
+        setBackendToken('ERROR');
+      }
+    };
+    getTokens();
+  }, [firebaseUser]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!isConnected) {
+      alert('Please wait for connection to be established before sending messages.');
+      return;
+    }
     sendMessage(newMessage);
+    setNewMessage('');
   };
 
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
-    
-    // Emit typing start
-    if (socket && isConnected) {
-      socket.emit('typing-start', { chatType, chatId });
-      
-      // Clear existing timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      
-      // Set timeout to stop typing indicator
-      typingTimeoutRef.current = setTimeout(() => {
-        if (socket && isConnected) {
-          socket.emit('typing-stop', { chatType, chatId });
-        }
-      }, 1000);
+    if (isConnected) {
+      startTyping();
     }
   };
 
@@ -248,8 +149,12 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const auth = getAuth();
-      const token = await auth.currentUser?.getIdToken();
+      if (!firebaseUser) {
+        console.error('No Firebase user available for file upload');
+        return;
+      }
+
+      const token = await firebaseUser.getIdToken();
 
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'}/api/users/upload-image`,
@@ -289,9 +194,10 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
   };
 
   const renderMessage = (message, index) => {
-    const isOwnMessage = message.sender?._id === currentUser?.uid || message.sender?.uid === currentUser?.uid;
+    const isOwnMessage = message.sender?._id === currentUser?._id || message.sender?.uid === firebaseUser?.uid;
     const showDate = index === 0 || 
       formatDate(message.createdAt) !== formatDate(messages[index - 1]?.createdAt);
+    const isPending = message.isPending || pendingMessages.has(message._id);
 
     return (
       <div key={message._id}>
@@ -300,7 +206,7 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
             <span>{formatDate(message.createdAt)}</span>
           </div>
         )}
-        <div className={`message ${isOwnMessage ? 'own-message' : 'other-message'}`}>
+        <div className={`message ${isOwnMessage ? 'own-message' : 'other-message'} ${isPending ? 'pending' : ''}`}>
           {!isOwnMessage && (
             <div className="message-avatar">
               <img 
@@ -334,7 +240,10 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
                   {message.isEdited && <span className="edited-indicator"> (edited)</span>}
                 </div>
               )}
-              <div className="message-time">{formatTime(message.createdAt)}</div>
+              <div className="message-time">
+                {formatTime(message.createdAt)}
+                {isPending && <span className="pending-indicator">⏳</span>}
+              </div>
             </div>
           </div>
         </div>
@@ -342,10 +251,17 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
     );
   };
 
+  if (!firebaseUser) {
+    return <div className="chat-loading">Please log in to use chat.</div>;
+  }
+
   if (isLoading) {
     return (
       <div className="chat-container">
-        <div className="chat-loading">Loading messages...</div>
+        <div className="chat-loading">
+          <div className="loading-spinner"></div>
+          <p>Loading messages...</p>
+        </div>
       </div>
     );
   }
@@ -353,16 +269,42 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h3>{chatName}</h3>
+        <h3>{chatName || 'Chat'}</h3>
         <div className="connection-status">
           <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
           {isConnected ? 'Connected' : 'Disconnected'}
+          {connectionAttempts > 0 && !isConnected && (
+            <span className="reconnecting"> (Attempt {connectionAttempts}/10)</span>
+          )}
+          {isConnected && (
+            <span className="connection-info"> - Ready to chat</span>
+          )}
         </div>
       </div>
+
+      {error && (
+        <div className="error-message">
+          <div className="error-icon">⚠️</div>
+          <div className="error-text">{error}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="error-retry"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="messages-container" ref={chatContainerRef}>
         {isLoadingMore && (
           <div className="loading-more">Loading more messages...</div>
+        )}
+        
+        {messages.length === 0 && !isLoading && !error && (
+          <div className="no-messages">
+            <div className="no-messages-icon">💬</div>
+            <p>No messages yet. Start the conversation!</p>
+          </div>
         )}
         
         {messages.map((message, index) => renderMessage(message, index))}
@@ -390,6 +332,7 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
           className="attach-button"
           onClick={() => fileInputRef.current?.click()}
           disabled={!isConnected}
+          title={!isConnected ? 'Connect to chat to attach files' : 'Attach file'}
         >
           📎
         </button>
@@ -398,12 +341,17 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
           type="text"
           value={newMessage}
           onChange={handleTyping}
-          placeholder="Type a message..."
+          placeholder={!isConnected ? "Connecting to chat..." : "Type a message..."}
           className="message-input"
           disabled={!isConnected}
         />
         
-        <button type="submit" className="send-button" disabled={!isConnected || !newMessage.trim()}>
+        <button 
+          type="submit" 
+          className="send-button" 
+          disabled={!isConnected || !newMessage.trim()}
+          title={!isConnected ? 'Connect to chat to send messages' : 'Send message'}
+        >
           ➤
         </button>
       </form>
