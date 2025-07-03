@@ -14,7 +14,14 @@ import {
   Heart,
   Clock,
   Eye,
-  Plus
+  Plus,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Youtube,
+  Mail,
+  Phone,
+  MapPin as LocationIcon
 } from 'lucide-react';
 
 const Home = ({ user, setUser }) => {
@@ -75,19 +82,22 @@ const Home = ({ user, setUser }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50 pt-24">
       <Navbar user={user} setUser={setUser} />
       
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-orange-700 to-orange-800">
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
-          </div>
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img
+            src="/banner image.jpg"
+            alt="Warm and cozy cafe scene with diverse young adults chatting around a wooden table"
+            className="w-full h-full object-cover"
+          />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
+          {/* Additional Blur Effect for Text Areas */}
+          <div className="absolute inset-0 backdrop-blur-sm"></div>
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center z-10">
@@ -452,6 +462,138 @@ const Home = ({ user, setUser }) => {
           </div>
         </div>
       </section>
+
+      {/* Premium Copyright Footer */}
+      <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
+        {/* Orange Radial Glow */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        
+        <div className="relative z-10">
+          {/* Main Footer Content */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+              
+              {/* About Coffee Chat */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 mb-6">
+                  <img 
+                    src="/Main Logo.png" 
+                    alt="Coffee Chat Logo" 
+                    className="h-8 w-auto object-contain"
+                  />
+                  <h3 className="text-xl font-bold text-white">Coffee Chat</h3>
+                </div>
+                <p className="text-gray-400 leading-relaxed">
+                  Connect over coffee and conversations. Build meaningful relationships through shared interests and exciting events.
+                </p>
+                <div className="space-y-2">
+                  <Link to="/about" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Our Story</Link>
+                  <Link to="/how-it-works" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">How it Works</Link>
+                  <Link to="/careers" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Careers</Link>
+                  <Link to="/blog" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Blog</Link>
+                </div>
+              </div>
+
+              {/* Your Account */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white mb-6">Your Account</h3>
+                <div className="space-y-2">
+                  <Link to="/login" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Login</Link>
+                  <Link to="/signup" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Sign Up</Link>
+                  <Link to="/dashboard" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Dashboard</Link>
+                  <Link to="/settings" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Settings</Link>
+                </div>
+              </div>
+
+              {/* Discover */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white mb-6">Discover</h3>
+                <div className="space-y-2">
+                  <Link to="/groups" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Groups</Link>
+                  <Link to="/events" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Events</Link>
+                  <Link to="/categories" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Categories</Link>
+                  <Link to="/search" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Search</Link>
+                </div>
+              </div>
+
+              {/* Help & Legal */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white mb-6">Help & Legal</h3>
+                <div className="space-y-2">
+                  <Link to="/contact" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Contact Us</Link>
+                  <Link to="/terms" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Terms of Use</Link>
+                  <Link to="/privacy" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Privacy Policy</Link>
+                  <Link to="/support" className="block text-gray-400 hover:text-orange-400 transition-colors duration-200">Support</Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Media Icons */}
+            <div className="mt-12 pt-8 border-t border-gray-700">
+              <div className="flex flex-col items-center space-y-6">
+                <h4 className="text-lg font-semibold text-white">Follow Us</h4>
+                <div className="flex space-x-4">
+                  <a 
+                    href="https://instagram.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group w-12 h-12 bg-gray-800 hover:bg-orange-500 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:shadow-orange-500/25"
+                    aria-label="Follow us on Instagram"
+                  >
+                    <Instagram className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                  </a>
+                  <a 
+                    href="https://twitter.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group w-12 h-12 bg-gray-800 hover:bg-orange-500 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:shadow-orange-500/25"
+                    aria-label="Follow us on Twitter"
+                  >
+                    <Twitter className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                  </a>
+                  <a 
+                    href="https://linkedin.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group w-12 h-12 bg-gray-800 hover:bg-orange-500 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:shadow-orange-500/25"
+                    aria-label="Follow us on LinkedIn"
+                  >
+                    <Linkedin className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                  </a>
+                  <a 
+                    href="https://youtube.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group w-12 h-12 bg-gray-800 hover:bg-orange-500 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:shadow-orange-500/25"
+                    aria-label="Follow us on YouTube"
+                  >
+                    <Youtube className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Copyright Bar */}
+          <div className="border-t border-gray-700 bg-gray-900/50 backdrop-blur-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div className="text-gray-400 text-sm">
+                  © 2025 Coffee Chat. All rights reserved.
+                </div>
+                <div className="flex items-center space-x-2 text-gray-400 text-sm">
+                  <span>Made with</span>
+                  <Coffee className="w-4 h-4 text-orange-400" />
+                  <span>by</span>
+                  <span className="text-orange-400 font-semibold">Madhav Garg</span>
+                  <span>• India • v1.0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

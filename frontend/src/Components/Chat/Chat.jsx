@@ -4,12 +4,14 @@ import axios from 'axios';
 import { useChat } from '../../hooks/useChat';
 import './Chat.css';
 
-const Chat = ({ chatType, chatId, chatName, currentUser }) => {
+const Chat = ({ chatType, chatId, chatName, currentUser, groupImage, eventImage, onLeaveGroup }) => {
   const [newMessage, setNewMessage] = useState('');
   const [scrollPosition, setScrollPosition] = useState(0);
   const [firebaseToken, setFirebaseToken] = useState('');
   const [backendToken, setBackendToken] = useState('');
   const [firebaseUser, setFirebaseUser] = useState(null);
+  const [showLeaveAlert, setShowLeaveAlert] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -174,6 +176,61 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
     }
   };
 
+  const handleLeaveChat = async () => {
+    setShowLeaveAlert(true);
+  };
+
+  const confirmLeaveChat = async () => {
+    setIsLeaving(true);
+    
+    try {
+      // Use backend JWT token instead of Firebase token for backend API calls
+      const backendToken = localStorage.getItem('token');
+      
+      if (!backendToken) {
+        console.error('No backend token available for leaving chat');
+        alert('Authentication error. Please log in again.');
+        return;
+      }
+      
+      // Call backend API to leave the chat/group
+      if (chatType === 'group') {
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'}/api/groups/${chatId}/leave`,
+          {},
+          {
+            headers: {
+              'Authorization': `Bearer ${backendToken}`
+            }
+          }
+        );
+        
+        // Call the callback to update parent component state
+        if (onLeaveGroup) {
+          onLeaveGroup();
+        }
+      }
+
+      // Don't navigate away, just close the alert
+      setShowLeaveAlert(false);
+    } catch (error) {
+      console.error('Error leaving chat:', error);
+      if (error.response?.status === 403) {
+        alert('You are not authorized to leave this group. Please contact the group administrator.');
+      } else if (error.response?.status === 404) {
+        alert('Group not found. It may have been deleted.');
+      } else {
+        alert('Failed to leave chat. Please try again.');
+      }
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
+  const cancelLeaveChat = () => {
+    setShowLeaveAlert(false);
+  };
+
   const formatTime = (date) => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -269,18 +326,59 @@ const Chat = ({ chatType, chatId, chatName, currentUser }) => {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h3>{chatName || 'Chat'}</h3>
-        <div className="connection-status">
-          <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
-          {isConnected ? 'Connected' : 'Disconnected'}
-          {connectionAttempts > 0 && !isConnected && (
-            <span className="reconnecting"> (Attempt {connectionAttempts}/10)</span>
-          )}
-          {isConnected && (
-            <span className="connection-info"> - Ready to chat</span>
-          )}
+        <div className="chat-header-left">
+          <img
+            src={groupImage || eventImage || '/default-group-avatar.png'}
+            alt={chatName || 'Group'}
+            className="chat-group-avatar"
+            onError={(e) => {
+              e.target.src = '/default-group-avatar.png';
+            }}
+          />
+          <div className="chat-group-info">
+            <h3 className="chat-group-name">{chatName || 'Chat'}</h3>
+            <div className="chat-online-status">
+              <span className="online-dot"></span>
+              {isConnected ? 'Online' : 'Offline'}
+              {connectionAttempts > 0 && !isConnected && (
+                <span> (Reconnecting...)</span>
+              )}
+            </div>
+          </div>
         </div>
+        
+        <button className="leave-chat-btn" onClick={handleLeaveChat}>
+          Leave Chat
+        </button>
       </div>
+
+      {showLeaveAlert && (
+        <div className="alert-overlay">
+          <div className="alert-modal">
+            <div className="alert-icon">⚠️</div>
+            <h3 className="alert-title">Leave Chat</h3>
+            <p className="alert-message">
+              Are you sure you want to leave this chat? You won't be able to send messages or see updates from this group.
+            </p>
+            <div className="alert-buttons">
+              <button 
+                className="alert-btn alert-btn-cancel" 
+                onClick={cancelLeaveChat}
+                disabled={isLeaving}
+              >
+                Cancel
+              </button>
+              <button 
+                className="alert-btn alert-btn-confirm" 
+                onClick={confirmLeaveChat}
+                disabled={isLeaving}
+              >
+                {isLeaving ? 'Leaving...' : 'Leave Chat'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="error-message">
