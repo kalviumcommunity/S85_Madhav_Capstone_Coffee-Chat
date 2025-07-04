@@ -2,9 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Users, Calendar, MessageCircle, PlusCircle, Star, Lock, Rocket, MessageSquare } from 'lucide-react';
-import BannerImg from '../assets/about/Banner.jpg';
-import StoryImg from '../assets/about/2 nd image.jpg';
-import FinalImg from '../assets/about/3 rd image.jpg';
+const BannerImg = "https://res.cloudinary.com/dfgzjz1by/image/upload/v1751633089/Banner_ydorot.jpg";
+const StoryImg ="https://res.cloudinary.com/dfgzjz1by/image/upload/v1751633059/2_nd_image_l2oa8u.jpg";
+const FinalImg ="https://res.cloudinary.com/dfgzjz1by/image/upload/v1751633088/3_rd_image_b98fce.jpg";
 
 const cardData = [
   {

@@ -9,8 +9,8 @@ const { getAllUsers, registerUser, loginUser, googleLogin, getProfile, updatePro
 router.get('/', getAllUsers);
 
 // Register new user (signup)
-router.post('/register', registerUser);
-router.post('/signup', registerUser); // Keep both for compatibility
+router.post('/register', upload.single('profileImage'), registerUser);
+router.post('/signup', upload.single('profileImage'), registerUser); // Keep both for compatibility
 
 router.post('/login', loginUser);
 router.post('/google-login', googleLogin);

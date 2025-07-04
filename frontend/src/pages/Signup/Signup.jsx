@@ -4,7 +4,7 @@ import { Eye, EyeOff, Mail, Lock, User, MapPin, AlertCircle, Check, Coffee, Arro
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
-import signupImg from '../../assets/signup.jpg';
+const signupImg ="https://res.cloudinary.com/dfgzjz1by/image/upload/v1751633247/signup_yxlceb.jpg";
 import BACKEND_URL from '../../config';
 
 const Signup = ({ setUser }) => {

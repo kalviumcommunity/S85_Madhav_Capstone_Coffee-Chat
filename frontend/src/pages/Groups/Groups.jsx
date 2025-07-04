@@ -23,14 +23,15 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './Groups.css';
-import clay from '../../assets/groups/clay-lindner-upEBfR0r_T4-unsplash.jpg';
-import mike from '../../assets/groups/mike-kilcoyne-WhvVTv4Hif8-unsplash.jpg';
-import cole from '../../assets/groups/cole-allen-Lqv3cjyTMS8-unsplash.jpg';
-import kelsey from '../../assets/groups/kelsey-chance-ZrhtQyGFG6s-unsplash.jpg';
-import pexels from '../../assets/groups/pexels-photo-5195502.jpeg';
-import michael from '../../assets/groups/michael-mckay-WyqSZPGxNLo-unsplash.jpg';
 import BACKEND_URL from '../../config';
 
+  const CAROUSEL_IMAGES = ["https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632079/michael-mckay-WyqSZPGxNLo-unsplash_b8eyuk.jpg",
+    "https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632078/mike-kilcoyne-WhvVTv4Hif8-unsplash_k2l255.jpg",
+    "https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632079/pexels-photo-5195502_vdygis.jpg",
+    "https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632078/kelsey-chance-ZrhtQyGFG6s-unsplash_nkaomm.jpg",
+    "https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632078/cole-allen-Lqv3cjyTMS8-unsplash_z15y2f.jpg",
+    "https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632078/clay-lindner-upEBfR0r_T4-unsplash_fazikk.jpg"
+  ];
 <style>{`
 @keyframes float {
   0% { transform: translateY(0px); }
@@ -74,7 +75,6 @@ import BACKEND_URL from '../../config';
 }
 `}</style>
 
-const CAROUSEL_IMAGES = [clay, mike, cole, kelsey, pexels, michael];
 
 function VerticalCarousel() {
   const [images, setImages] = useState(CAROUSEL_IMAGES);
