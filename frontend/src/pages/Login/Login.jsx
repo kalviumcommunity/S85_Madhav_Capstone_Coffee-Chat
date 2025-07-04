@@ -5,7 +5,7 @@ import { Eye, EyeOff, Mail, Lock, AlertCircle, Coffee, ArrowRight, Users, Heart 
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
-import loginImg from '../../assets/login.jpg';
+const loginImg ="https://res.cloudinary.com/dfgzjz1by/image/upload/v1751633258/login_xd0wmn.jpg";
 import BACKEND_URL from '../../config';
 
 const Login = ({ setUser }) => {

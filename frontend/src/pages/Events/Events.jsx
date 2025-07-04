@@ -22,18 +22,24 @@ import {
 } from 'lucide-react';
 import { format, isAfter, isBefore, addDays } from 'date-fns';
 import toast from 'react-hot-toast';
-import alexander from '../../assets/events/alexander-ward-MXv-9PlMyzw-unsplash.jpg';
-import anthony from '../../assets/events/anthony-delanoix-hzgs56Ze49s-unsplash.jpg';
-import ashley from '../../assets/events/ashley-edwards-V9YOjHqEWww-unsplash.jpg';
-import kaleb from '../../assets/events/kaleb-nimz--5rA4DRrEXU-unsplash.jpg';
-import lukas from '../../assets/events/lukas-eggers-tcx3xQgqU-k-unsplash.jpg';
-import teddy from '../../assets/events/pexels-teddy-2263436.jpg';
-import wendy from '../../assets/events/pexels-wendywei-1190297.jpg';
+// import alexander from '../../assets/events/alexander-ward-MXv-9PlMyzw-unsplash.jpg';
+// import anthony from '../../assets/events/anthony-delanoix-hzgs56Ze49s-unsplash.jpg';
+// import ashley from '../../assets/events/ashley-edwards-V9YOjHqEWww-unsplash.jpg';
+// import kaleb from '../../assets/events/kaleb-nimz--5rA4DRrEXU-unsplash.jpg';
+// import lukas from '../../assets/events/lukas-eggers-tcx3xQgqU-k-unsplash.jpg';
+// import teddy from '../../assets/events/pexels-teddy-2263436.jpg';
+// import wendy from '../../assets/events/pexels-wendywei-1190297.jpg';
 import BACKEND_URL from '../../config';
 // Ensure the Events page CSS is loaded for carousel animation
 import './Events.css';
 
-const EVENT_IMAGES = [alexander, anthony, ashley, kaleb, lukas, teddy, wendy];
+const EVENT_IMAGES = ["https://res.cloudinary.com/dfgzjz1by/image/upload/v1751631793/alexander-ward-MXv-9PlMyzw-unsplash_cpvghg.jpg",
+"https://res.cloudinary.com/dfgzjz1by/image/upload/v1751631793/pexels-wendywei-1190297_f1vm9v.jpg",
+"https://res.cloudinary.com/dfgzjz1by/image/upload/v1751631793/pexels-teddy-2263436_hvzrnp.jpg",
+"https://res.cloudinary.com/dfgzjz1by/image/upload/v1751631792/anthony-delanoix-hzgs56Ze49s-unsplash_qedt3n.jpg",
+"https://res.cloudinary.com/dfgzjz1by/image/upload/v1751631793/ashley-edwards-V9YOjHqEWww-unsplash_gpahoy.jpg",
+"https://res.cloudinary.com/dfgzjz1by/image/upload/v1751631793/lukas-eggers-tcx3xQgqU-k-unsplash_gl8urg.jpg",
+"https://res.cloudinary.com/dfgzjz1by/image/upload/v1751631792/kaleb-nimz--5rA4DRrEXU-unsplash_sackql.jpg" ];
 
 function HorizontalCarousel() {
   const images = EVENT_IMAGES;

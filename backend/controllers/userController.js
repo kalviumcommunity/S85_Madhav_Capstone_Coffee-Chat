@@ -134,7 +134,15 @@ const googleLogin = async (req, res) => {
       await user.save();
     } else if (mode === "login") {
       if (!user) {
-        return res.status(404).json({ error: "User not found. Please sign up first." });
+        // Auto-create user if not found
+        user = new User({
+          name,
+          email,
+          profileImage: picture,
+          password: undefined,
+          provider: "google",
+        });
+        await user.save();
       }
     } else {
       return res.status(400).json({ error: "Invalid mode" });
