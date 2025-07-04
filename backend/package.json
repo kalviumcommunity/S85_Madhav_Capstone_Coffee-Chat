@@ -33,6 +33,7 @@
     "mongoose": "^7.5.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.7",
+    "react-router-hash-link": "^2.4.3",
     "socket.io": "^4.7.4",
     "validator": "^13.11.0"
   },
