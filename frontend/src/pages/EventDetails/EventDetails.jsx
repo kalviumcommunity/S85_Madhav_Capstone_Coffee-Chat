@@ -23,6 +23,7 @@ import {
 import { format, isAfter, isBefore } from 'date-fns';
 import toast from 'react-hot-toast';
 import './EventDetails.css';
+import BACKEND_URL from '../../config';
 
 const EventDetails = ({ user, setUser }) => {
   const { id } = useParams();
@@ -52,7 +53,7 @@ const EventDetails = ({ user, setUser }) => {
   const fetchEventDetails = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -97,7 +98,7 @@ const EventDetails = ({ user, setUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${id}/join`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${id}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -120,7 +121,7 @@ const EventDetails = ({ user, setUser }) => {
   const handleLeave = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${id}/leave`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${id}/leave`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -148,7 +149,7 @@ const EventDetails = ({ user, setUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${eventId}/rsvp`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${eventId}/rsvp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -206,7 +207,7 @@ const EventDetails = ({ user, setUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -234,7 +235,7 @@ const EventDetails = ({ user, setUser }) => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -304,7 +305,7 @@ const EventDetails = ({ user, setUser }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/events/${event._id}/bookmark`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${event._id}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { MapPin, Users, Calendar, Eye, Clock } from 'lucide-react';
+import BACKEND_URL from '../../config';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -16,8 +17,8 @@ const SearchResults = ({ user, setUser }) => {
     if (!query) return;
     setLoading(true);
     Promise.all([
-      fetch('http://localhost:3000/api/groups').then(res => res.json()),
-      fetch('http://localhost:3000/api/events').then(res => res.json()),
+      fetch(`${BACKEND_URL}/api/groups`).then(res => res.json()),
+      fetch(`${BACKEND_URL}/api/events`).then(res => res.json()),
     ]).then(([groupsData, eventsData]) => {
       setGroups(
         groupsData.filter(group =>

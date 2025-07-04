@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { io } from "socket.io-client/dist/socket.io.js";
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
+import BACKEND_URL from '../config';
 
 export const useChat = (chatType, chatId, currentUser) => {
   const [messages, setMessages] = useState([]);
@@ -81,7 +82,7 @@ export const useChat = (chatType, chatId, currentUser) => {
         }
         try {
           const token = await user.getIdToken(true); // force refresh
-          const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+          const backendUrl = BACKEND_URL;
           console.log('[useChat] VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
           console.log('[useChat] Connecting to backend at:', backendUrl);
           console.log('[useChat] FIREBASE TOKEN (first 10):', token?.slice(0, 10));
@@ -403,7 +404,7 @@ export const useChat = (chatType, chatId, currentUser) => {
       }
       
       const token = await user.getIdToken();
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      const backendUrl = BACKEND_URL;
       
       console.log('Loading messages from:', `${backendUrl}/api/chat/messages/${chatType}/${chatId}`);
       
@@ -469,7 +470,7 @@ export const useChat = (chatType, chatId, currentUser) => {
       }
       
       const token = await user.getIdToken();
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      const backendUrl = BACKEND_URL;
       
       const response = await axios.get(
         `${backendUrl}/api/chat/messages/${chatType}/${chatId}?page=${page + 1}`,
@@ -661,7 +662,7 @@ export const useChat = (chatType, chatId, currentUser) => {
       const token = await user.getIdToken(true);
       console.log('[useChat] 🔑 Manual test - Firebase token (first 10):', token?.slice(0, 10));
       
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      const backendUrl = BACKEND_URL;
       console.log('[useChat] 🌐 Manual test - Backend URL:', backendUrl);
       
       // Test REST API first

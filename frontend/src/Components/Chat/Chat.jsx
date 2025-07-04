@@ -3,6 +3,7 @@ import { getAuth } from 'firebase/auth';
 import axios from 'axios';
 import { useChat } from '../../hooks/useChat';
 import './Chat.css';
+import BACKEND_URL from '../../config';
 
 const Chat = ({ chatType, chatId, chatName, currentUser, groupImage, eventImage, onLeaveGroup }) => {
   const [newMessage, setNewMessage] = useState('');
@@ -159,7 +160,7 @@ const Chat = ({ chatType, chatId, chatName, currentUser, groupImage, eventImage,
       const token = await firebaseUser.getIdToken();
 
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'}/api/users/upload-image`,
+        `${BACKEND_URL}/api/users/upload-image`,
         formData,
         {
           headers: {
@@ -196,7 +197,7 @@ const Chat = ({ chatType, chatId, chatName, currentUser, groupImage, eventImage,
       // Call backend API to leave the chat/group
       if (chatType === 'group') {
         await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'}/api/groups/${chatId}/leave`,
+          `${BACKEND_URL}/api/groups/${chatId}/leave`,
           {},
           {
             headers: {

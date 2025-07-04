@@ -17,6 +17,7 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import About from './pages/About';
 import SearchResults from './pages/SearchResults/SearchResults';
+import BACKEND_URL from './config';
 
 function AppRoutes() {
   const [user, setUser] = useState(null);
@@ -31,7 +32,7 @@ function AppRoutes() {
       if (token) {
         try {
           // Verify token with backend
-          const response = await fetch('http://localhost:3000/api/users/profile', {
+          const response = await fetch(`${BACKEND_URL}/api/users/profile`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -58,7 +59,7 @@ function AppRoutes() {
             // User is logged in with Firebase, but we need to get JWT token
             try {
               const idToken = await firebaseUser.getIdToken();
-              const response = await fetch('http://localhost:3000/api/users/google-login', {
+              const response = await fetch(`${BACKEND_URL}/api/users/google-login`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ function AppRoutes() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await fetch('http://localhost:3000/api/users/logout', {
+          await fetch(`${BACKEND_URL}/api/users/logout`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`

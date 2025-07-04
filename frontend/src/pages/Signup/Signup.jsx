@@ -5,6 +5,7 @@ import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
 import signupImg from '../../assets/signup.jpg';
+import BACKEND_URL from '../../config';
 
 const Signup = ({ setUser }) => {
   const [formData, setFormData] = useState({
@@ -112,7 +113,7 @@ const Signup = ({ setUser }) => {
         formDataToSend.append('profileImage', profileImage);
       }
 
-      const response = await fetch('http://localhost:3000/api/users/register', {
+      const response = await fetch(`${BACKEND_URL}/api/users/register`, {
         method: 'POST',
         body: formDataToSend,
       });
@@ -149,7 +150,7 @@ const Signup = ({ setUser }) => {
       const idToken = await user.getIdToken();
       
       // Send token to backend
-      const response = await fetch('http://localhost:3000/api/users/google-login', {
+      const response = await fetch(`${BACKEND_URL}/api/users/google-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

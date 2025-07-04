@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { UsersThree, CalendarPlus, ChartLineUp, ChatCircleText } from 'phosphor-react';
 import SearchResults from '../../pages/SearchResults/SearchResults';
+import BACKEND_URL from '../../config';
 
 const Home = ({ user, setUser }) => {
   const [featuredGroups, setFeaturedGroups] = useState([]);
@@ -49,14 +50,14 @@ const Home = ({ user, setUser }) => {
       setLoading(true);
       
       // Fetch featured groups
-      const groupsResponse = await fetch('http://localhost:3000/api/groups/featured');
+      const groupsResponse = await fetch(`${BACKEND_URL}/api/groups/featured`);
       if (groupsResponse.ok) {
         const groupsData = await groupsResponse.json();
         setFeaturedGroups(groupsData.slice(0, 6));
       }
 
       // Fetch featured events
-      const eventsResponse = await fetch('http://localhost:3000/api/events/featured');
+      const eventsResponse = await fetch(`${BACKEND_URL}/api/events/featured`);
       if (eventsResponse.ok) {
         const eventsData = await eventsResponse.json();
         setFeaturedEvents(eventsData.slice(0, 6));
