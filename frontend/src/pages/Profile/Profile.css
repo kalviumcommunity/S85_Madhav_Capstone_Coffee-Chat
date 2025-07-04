@@ -162,6 +162,55 @@
   padding: 3rem;
 }
 
+/* Premium card look for profile */
+.premium-card {
+  background: white;
+  border-radius: 1.5rem; /* rounded-2xl */
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 1.5px 4px rgba(0,0,0,0.08);
+  padding: 2rem;
+  position: relative;
+}
+
+/* Watermark styling */
+.profile-watermark {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  opacity: 0.08;
+  z-index: 0;
+  pointer-events: none;
+  font-size: 8rem;
+  color: #f4b183;
+}
+
+/* Tab styling for smooth transitions and rounded active tab */
+.profile-tabs {
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1.5px solid #f4f2f0;
+  margin-bottom: 0.5rem;
+}
+.profile-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem 0.5rem 1.5rem;
+  border-radius: 1rem 1rem 0 0;
+  background: none;
+  border: none;
+  font-weight: 500;
+  font-size: 1rem;
+  color: #b4690e;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.profile-tab.active {
+  background: #fff7f0;
+  color: #ff7a00;
+  box-shadow: 0 2px 8px rgba(244,178,131,0.08);
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .profile-header {
     flex-direction: column;
@@ -184,5 +233,15 @@
 
   .profile-container {
     padding: 1rem;
+  }
+
+  .premium-card {
+    padding: 1rem;
+  }
+
+  .profile-watermark {
+    font-size: 4rem;
+    bottom: 1rem;
+    right: 1rem;
   }
 } 

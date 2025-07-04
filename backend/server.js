@@ -38,8 +38,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Test route
 app.get("/", async (req, res) => {
-  res.json("This is my Coffee Chat website");
+  res.status(200).json({
+    message: "Welcome to the Coffee Chat API",
+    status: "success",
+    version: "1.0",
+    timestamp: new Date().toISOString(),
+    info: "This backend powers the Coffee Chat platform for connecting people through groups and events."
+  });
 });
+
 
 // API Routes
 app.use('/api/users', userRoutes);

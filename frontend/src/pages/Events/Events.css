@@ -1,3 +1,34 @@
+body, .event-page-wrapper {
+  background: radial-gradient(ellipse at top left, #FFF7E6, transparent 70%),
+              radial-gradient(ellipse at bottom right, #FFE9D6, transparent 70%),
+              linear-gradient(135deg, #FFF7ED, #FFEEE0);
+  background-blend-mode: soft-light;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.mesh-light {
+  position: absolute;
+  top: -100px;
+  left: -100px;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, #FFB67A 0%, transparent 60%);
+  opacity: 0.2;
+  animation: pulse-light 12s ease-in-out infinite alternate;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(80px);
+}
+
+@keyframes pulse-light {
+  0%   { transform: scale(1) translate(0, 0); opacity: 0.15; }
+  100% { transform: scale(1.2) translate(20px, 20px); opacity: 0.25; }
+}
+
 .events-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -637,4 +668,241 @@
   outline: 2px solid #667eea;
   outline-offset: 2px;
   border-radius: 0.25rem;
+}
+
+.event-hero-carousel-wrapper {
+  background: rgba(255,255,255,0.10);
+  border-radius: 2rem;
+  box-shadow: 0 12px 40px rgba(255, 171, 54, 0.10), 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  position: relative;
+  min-width: 0;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-hero-carousel-track img {
+  border-radius: 1.5rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  background: #FFF0E0;
+  transition: all 0.7s cubic-bezier(.4,0,.2,1);
+  width: 300px;
+  height: 260px;
+  object-fit: cover;
+  opacity: 1;
+}
+
+@media (max-width: 1200px) {
+  .event-hero-carousel-wrapper {
+    width: 100% !important;
+    min-width: 0;
+    height: 200px;
+  }
+  .event-hero-carousel-track img {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+@media (max-width: 900px) {
+  .event-hero-carousel-wrapper {
+    width: 100% !important;
+    min-width: 0;
+    height: 160px;
+  }
+  .event-hero-carousel-track img {
+    width: 140px;
+    height: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .event-hero-carousel-wrapper {
+    height: 120px !important;
+    padding: 0;
+  }
+  .event-hero-carousel-track img {
+    height: 90px !important;
+    width: 90px !important;
+  }
+}
+
+.create-btn {
+  background: linear-gradient(90deg, #FF7A1A 0%, #FFAB36 100%);
+  box-shadow: 0 2px 16px 0 rgba(255,171,54,0.10);
+  border-radius: 2rem;
+  font-size: 1.08rem;
+  letter-spacing: 0.01em;
+  padding: 0.7rem 2.2rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: 2px solid #FFD9B0;
+}
+
+.create-btn:hover {
+  border-color: #FFAB36;
+  box-shadow: 0 0 18px 4px #FFAB36;
+}
+
+.carousel-wrapper {
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  height: 260px;
+  position: relative;
+  border-radius: 2rem;
+  background: rgba(255,255,255,0.10);
+  box-shadow: 0 12px 40px rgba(255, 171, 54, 0.10), 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-track {
+  display: flex;
+  width: fit-content;
+  animation: scroll-left 32s linear infinite;
+}
+
+@keyframes scroll-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.carousel-track[data-images-count][data-image-width][data-gap] {
+  --carousel-anim-width: calc(var(--images-count, 7) * (var(--image-width, 300) + var(--gap, 40)) * 1px);
+}
+
+.carousel-track img {
+  width: 300px;
+  height: 260px;
+  margin-right: 40px;
+  border-radius: 1.5rem;
+  object-fit: cover;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  background: #FFF0E0;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .carousel-wrapper {
+    height: 200px;
+  }
+  .carousel-track img {
+    width: 200px;
+    height: 200px;
+    margin-right: 24px;
+  }
+}
+@media (max-width: 900px) {
+  .carousel-wrapper {
+    height: 140px;
+  }
+  .carousel-track img {
+    width: 120px;
+    height: 120px;
+    margin-right: 16px;
+  }
+}
+@media (max-width: 768px) {
+  .carousel-wrapper {
+    height: 90px;
+  }
+  .carousel-track img {
+    width: 70px;
+    height: 70px;
+    margin-right: 10px;
+  }
+}
+
+/* --- Premium Events Hero Section --- */
+.events-hero-glass {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10), 0 1.5px 0px #fff;
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-radius: 2.5rem;
+  padding: 2.5rem 2rem 2.5rem 2rem;
+  margin-bottom: 2rem;
+  max-width: 650px;
+  width: 100%;
+  transition: box-shadow 0.3s;
+}
+@media (min-width: 768px) {
+  .events-hero-glass {
+    padding: 3.5rem 3rem 3.5rem 3rem;
+    margin-bottom: 0;
+  }
+}
+
+.events-hero-heading {
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1.08;
+  color: #18181b;
+  letter-spacing: -0.5px;
+  margin-bottom: 1.1rem;
+  text-shadow: 0 2px 12px rgba(24, 24, 27, 0.08);
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .events-hero-heading {
+    font-size: 3.5rem;
+    text-align: left;
+  }
+}
+@media (min-width: 1024px) {
+  .events-hero-heading {
+    font-size: 4.2rem;
+  }
+}
+
+.events-hero-subheading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2e2e2e;
+  opacity: 0.92;
+  margin-bottom: 1.1rem;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 12px rgba(255, 171, 54, 0.08);
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .events-hero-subheading {
+    font-size: 1.7rem;
+    text-align: left;
+  }
+}
+
+.events-hero-paragraph {
+  font-size: 1.08rem;
+  color: #2e2e2e;
+  opacity: 0.82;
+  margin-bottom: 0;
+  max-width: 38rem;
+  font-weight: 500;
+  text-shadow: 0 1.5px 8px rgba(255, 171, 54, 0.07);
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .events-hero-paragraph {
+    font-size: 1.18rem;
+    text-align: left;
+  }
+}
+
+.events-hero-section-flex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+@media (min-width: 768px) {
+  .events-hero-section-flex {
+    align-items: flex-start;
+  }
 } 

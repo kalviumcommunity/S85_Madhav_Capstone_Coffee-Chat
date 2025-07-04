@@ -24,7 +24,7 @@ import toast from 'react-hot-toast';
 import './GroupDetails.css';
 import { Link } from 'react-router-dom';
 
-const GroupDetails = ({ user, setUser }) => {
+const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [group, setGroup] = useState(null);
@@ -127,6 +127,12 @@ const GroupDetails = ({ user, setUser }) => {
     }
   };
 
+  const handleLeaveGroupFromChat = () => {
+    setIsMember(false);
+    toast.success('Left the group successfully');
+    fetchGroupDetails(); // Refresh group data
+  };
+
   const handleEdit = async (e) => {
     e.preventDefault();
     setEditLoading(true);
@@ -209,7 +215,7 @@ const GroupDetails = ({ user, setUser }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${group._id}/bookmark`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/groups/${group._id}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -223,6 +229,14 @@ const GroupDetails = ({ user, setUser }) => {
           ...prev,
           isBookmarked: data.isBookmarked
         }));
+        if (typeof onBookmarkSync === 'function') {
+          onBookmarkSync(group._id, data.isBookmarked);
+        }
+        if (setGroups) {
+          setGroups(prevGroups => prevGroups.map(g =>
+            g._id === group._id ? { ...g, isBookmarked: data.isBookmarked } : g
+          ));
+        }
         toast.success(data.isBookmarked ? 'Group bookmarked!' : 'Group removed from bookmarks');
       } else {
         toast.error('Failed to bookmark group');
@@ -243,7 +257,7 @@ const GroupDetails = ({ user, setUser }) => {
     return (
       <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
         <Navbar user={user} setUser={setUser} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
           <div className="animate-pulse">
             <div className="bg-secondary-200 dark:bg-secondary-700 h-8 rounded w-1/3 mb-4"></div>
             <div className="bg-secondary-200 dark:bg-secondary-700 h-64 rounded-lg mb-6"></div>
@@ -261,7 +275,7 @@ const GroupDetails = ({ user, setUser }) => {
     return (
       <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
         <Navbar user={user} setUser={setUser} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 text-center">
           <h1 className="text-2xl font-bold text-secondary-900 dark:text-white mb-4">
             Group not found
           </h1>
@@ -279,7 +293,7 @@ const GroupDetails = ({ user, setUser }) => {
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
       <Navbar user={user} setUser={setUser} />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
@@ -318,13 +332,13 @@ const GroupDetails = ({ user, setUser }) => {
             {/* Bookmark and Share buttons */}
             <button
               onClick={handleBookmark}
-              className={`p-2 rounded-full transition-all duration-200 ${
+              className={`p-2 rounded-full transition-all duration-300 shadow-lg backdrop-blur-sm ${
                 group.isBookmarked 
-                  ? 'bg-primary-600 text-white shadow-lg' 
-                  : 'bg-white/90 dark:bg-secondary-800/90 text-secondary-600 hover:text-primary-600 shadow-lg'
+                  ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                  : 'bg-white/90 text-gray-600 hover:text-orange-600 hover:bg-white'
               }`}
             >
-              <Bookmark className="w-5 h-5" />
+              <Bookmark className={`w-5 h-5 ${group.isBookmarked ? 'fill-current' : ''}`} />
             </button>
             <button
               onClick={handleShare}
@@ -512,6 +526,8 @@ const GroupDetails = ({ user, setUser }) => {
                         chatId={id}
                         chatName={group.name}
                         currentUser={user}
+                        groupImage={group.image}
+                        onLeaveGroup={handleLeaveGroupFromChat}
                       />
                     </div>
                   </div>
