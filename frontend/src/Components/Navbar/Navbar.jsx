@@ -5,6 +5,7 @@ import { getAuth, signOut } from 'firebase/auth';
 import { ChevronDown, User as UserIcon, LogOut } from 'lucide-react';
 
 const navLinks = [
+  { name: 'About', to: '/about' },
   { name: 'Home', to: '/' },
   { name: 'Groups', to: '/groups' },
   { name: 'Events', to: '/events' },

@@ -168,8 +168,7 @@ function VerticalCarousel() {
   );
 }
 
-const Groups = ({ user, setUser }) => {
-  const [groups, setGroups] = useState([]);
+const Groups = ({ user, setUser, groups, setGroups }) => {
   const [filteredGroups, setFilteredGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -299,14 +298,14 @@ const Groups = ({ user, setUser }) => {
     }
   };
 
-  const handleBookmark = async (groupId) => {
+  const handleBookmark = async (groupId, isBookmarkedOverride) => {
     if (!user) {
       toast.error('Please log in to bookmark groups');
       return;
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/bookmark`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/groups/${groupId}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -321,6 +320,9 @@ const Groups = ({ user, setUser }) => {
             ? { ...group, isBookmarked: data.isBookmarked }
             : group
         ));
+        if (typeof isBookmarkedOverride === 'function') {
+          isBookmarkedOverride(data.isBookmarked);
+        }
         toast.success(data.isBookmarked ? 'Group bookmarked!' : 'Group removed from bookmarks');
       } else {
         toast.error('Failed to bookmark group');
@@ -331,7 +333,7 @@ const Groups = ({ user, setUser }) => {
     }
   };
 
-  const GroupCard = ({ group }) => {
+  const GroupCard = ({ group, onBookmarkSync }) => {
     const isMember = group.isMember || group.members?.some(member => member._id === user?._id);
     const isBookmarked = group.isBookmarked || user?.bookmarkedGroups?.includes(group._id);
     const memberCount = group.memberCount || group.members?.length || 0;
@@ -372,7 +374,7 @@ const Groups = ({ user, setUser }) => {
             
             {/* Bookmark Button */}
             <button
-              onClick={() => handleBookmark(group._id)}
+              onClick={() => handleBookmark(group._id, onBookmarkSync)}
               className={`p-2 rounded-full transition-all duration-300 shadow-lg backdrop-blur-sm ${
                 isBookmarked 
                   ? 'bg-orange-500 text-white hover:bg-orange-600' 

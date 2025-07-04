@@ -304,7 +304,7 @@ const EventDetails = ({ user, setUser }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/events/${event._id}/bookmark`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/events/${event._id}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

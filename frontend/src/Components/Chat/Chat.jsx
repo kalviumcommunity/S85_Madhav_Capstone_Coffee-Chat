@@ -324,7 +324,7 @@ const Chat = ({ chatType, chatId, chatName, currentUser, groupImage, eventImage,
   }
 
   return (
-    <div className="chat-container">
+    <div className="chat-container bokeh-bg">
       <div className="chat-header">
         <div className="chat-header-left">
           <img

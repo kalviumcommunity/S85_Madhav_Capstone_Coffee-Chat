@@ -13,11 +13,16 @@ import CreateEvent from './pages/CreateEvent/CreateEvent';
 import EventDetails from './pages/EventDetails/EventDetails';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './Components/Navbar/Navbar';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import About from './pages/About';
+import SearchResults from './pages/SearchResults/SearchResults';
 
 function AppRoutes() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [groups, setGroups] = useState([]);
 
   // Check for existing JWT token on app load
   useEffect(() => {
@@ -187,7 +192,7 @@ function AppRoutes() {
           />
           <Route 
             path="/groups" 
-            element={<Groups user={user} setUser={setUser} />} 
+            element={<Groups user={user} setUser={setUser} groups={groups} setGroups={setGroups} />} 
           />
           <Route 
             path="/groups/create" 
@@ -197,7 +202,7 @@ function AppRoutes() {
           />
           <Route 
             path="/groups/:id" 
-            element={<GroupDetails user={user} setUser={setUser} />} 
+            element={<GroupDetails user={user} setUser={setUser} setGroups={setGroups} />} 
           />
           <Route 
             path="/events" 
@@ -217,6 +222,10 @@ function AppRoutes() {
             path="/profile" 
             element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" replace />} 
           />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/search" element={<SearchResults user={user} setUser={setUser} />} />
         </Routes>
       </div>
     </>

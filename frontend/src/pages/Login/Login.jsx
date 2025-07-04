@@ -133,63 +133,29 @@ const Login = ({ setUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex pt-20 md:pt-24">
-      {/* Left Side - Image Section */}
-      <div className={`hidden lg:flex lg:w-1/2 relative overflow-hidden ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-orange-500/10 to-orange-400/20"></div>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex flex-col md:flex-row pt-20 md:pt-24">
+      {/* Left Side - Image with Overlay and Text */}
+      <div className="relative w-full md:w-1/2 h-64 md:min-h-screen md:h-auto overflow-hidden flex-shrink-0">
         <img
           src={loginImg}
-          alt="Login to Coffee Chat - people connecting over coffee"
-          className="absolute inset-0 w-full h-full object-cover object-center z-0"
-          style={{ minHeight: '100%', minWidth: '100%', filter: 'brightness(0.96) saturate(1.08)', boxShadow: '0 12px 48px 0 rgba(255,171,54,0.13)' }}
+          alt="Login Visual"
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="relative w-full h-full flex items-center justify-center" style={{paddingTop: '6.5rem'}}>
-          {/* Background Pattern */}
-          <div className="absolute inset-0">
-            <div className="absolute top-20 left-20 w-64 h-64 bg-orange-200/30 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-20 w-80 h-80 bg-orange-300/20 rounded-full blur-3xl"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-100/40 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-black/40" />
+        {/* Feature Badges in a row at bottom left */}
+        <div className="hidden sm:flex flex-row gap-4 absolute left-6 bottom-6 z-20">
+          <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md rounded-full px-5 py-3 shadow-lg">
+            <Users className="w-6 h-6 text-white" />
+            <span className="text-white font-medium text-base">Join Groups</span>
           </div>
-          
-          {/* Content */}
-          <div className="relative z-10 text-center text-white px-12">
-            <div className="mb-8">
-              <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 mb-6">
-                <Coffee className="w-6 h-6" />
-                <span className="font-medium">Welcome to Coffee Chat</span>
-              </div>
-            </div>
-            
-            <h1 className="text-5xl font-bold mb-6 leading-tight">
-              Connect Over
-              <span className="block text-orange-200 mt-2">Coffee & Conversations</span>
-            </h1>
-            
-            <p className="text-xl text-orange-100 mb-8 max-w-md mx-auto leading-relaxed">
-              Join thousands of people who are already building meaningful connections through shared interests and passions.
-            </p>
-            
-            {/* Feature Icons */}
-            <div className="flex justify-center space-x-8">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Users className="w-6 h-6" />
-                </div>
-                <p className="text-sm text-orange-100">Join Groups</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Heart className="w-6 h-6" />
-                </div>
-                <p className="text-sm text-orange-100">Make Friends</p>
-              </div>
-            </div>
+          <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md rounded-full px-5 py-3 shadow-lg">
+            <Heart className="w-6 h-6 text-white" />
+            <span className="text-white font-medium text-base">Make Friends</span>
           </div>
-          
-          {/* Floating Elements */}
-          <div className="absolute top-1/4 left-1/4 w-16 h-16 bg-white/10 rounded-full animate-bounce"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-12 h-12 bg-white/10 rounded-full animate-bounce" style={{ animationDelay: '1s' }}></div>
         </div>
+        {/* Animated Floating Blobs */}
+        <div className="absolute top-10 left-10 w-16 h-16 bg-white/10 rounded-full animate-bounce z-10" />
+        <div className="absolute bottom-10 right-10 w-12 h-12 bg-white/10 rounded-full animate-bounce z-10" style={{ animationDelay: '1s' }} />
       </div>
 
       {/* Right Side - Form Section */}

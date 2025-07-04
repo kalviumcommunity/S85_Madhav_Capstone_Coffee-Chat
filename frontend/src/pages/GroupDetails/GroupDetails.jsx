@@ -24,7 +24,7 @@ import toast from 'react-hot-toast';
 import './GroupDetails.css';
 import { Link } from 'react-router-dom';
 
-const GroupDetails = ({ user, setUser }) => {
+const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [group, setGroup] = useState(null);
@@ -215,7 +215,7 @@ const GroupDetails = ({ user, setUser }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${group._id}/bookmark`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/groups/${group._id}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,6 +229,14 @@ const GroupDetails = ({ user, setUser }) => {
           ...prev,
           isBookmarked: data.isBookmarked
         }));
+        if (typeof onBookmarkSync === 'function') {
+          onBookmarkSync(group._id, data.isBookmarked);
+        }
+        if (setGroups) {
+          setGroups(prevGroups => prevGroups.map(g =>
+            g._id === group._id ? { ...g, isBookmarked: data.isBookmarked } : g
+          ));
+        }
         toast.success(data.isBookmarked ? 'Group bookmarked!' : 'Group removed from bookmarks');
       } else {
         toast.error('Failed to bookmark group');
@@ -324,13 +332,13 @@ const GroupDetails = ({ user, setUser }) => {
             {/* Bookmark and Share buttons */}
             <button
               onClick={handleBookmark}
-              className={`p-2 rounded-full transition-all duration-200 ${
+              className={`p-2 rounded-full transition-all duration-300 shadow-lg backdrop-blur-sm ${
                 group.isBookmarked 
-                  ? 'bg-primary-600 text-white shadow-lg' 
-                  : 'bg-white/90 dark:bg-secondary-800/90 text-secondary-600 hover:text-primary-600 shadow-lg'
+                  ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                  : 'bg-white/90 text-gray-600 hover:text-orange-600 hover:bg-white'
               }`}
             >
-              <Bookmark className="w-5 h-5" />
+              <Bookmark className={`w-5 h-5 ${group.isBookmarked ? 'fill-current' : ''}`} />
             </button>
             <button
               onClick={handleShare}
