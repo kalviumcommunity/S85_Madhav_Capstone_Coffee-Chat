@@ -29,6 +29,7 @@ import kaleb from '../../assets/events/kaleb-nimz--5rA4DRrEXU-unsplash.jpg';
 import lukas from '../../assets/events/lukas-eggers-tcx3xQgqU-k-unsplash.jpg';
 import teddy from '../../assets/events/pexels-teddy-2263436.jpg';
 import wendy from '../../assets/events/pexels-wendywei-1190297.jpg';
+import BACKEND_URL from '../../config';
 // Ensure the Events page CSS is loaded for carousel animation
 import './Events.css';
 
@@ -123,7 +124,7 @@ const Events = ({ user, setUser }) => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/api/events');
+      const response = await fetch(`${BACKEND_URL}/api/events`);
       if (response.ok) {
         const data = await response.json();
         setEvents(data);
@@ -231,7 +232,7 @@ const Events = ({ user, setUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${eventId}/rsvp`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${eventId}/rsvp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -292,7 +293,7 @@ const Events = ({ user, setUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${eventId}/join`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${eventId}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -320,7 +321,7 @@ const Events = ({ user, setUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/events/${eventId}/leave`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${eventId}/leave`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -347,7 +348,7 @@ const Events = ({ user, setUser }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/events/${eventId}/bookmark`, {
+      const response = await fetch(`${BACKEND_URL}/api/events/${eventId}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

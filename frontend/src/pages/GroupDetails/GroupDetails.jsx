@@ -23,6 +23,7 @@ import {
 import toast from 'react-hot-toast';
 import './GroupDetails.css';
 import { Link } from 'react-router-dom';
+import BACKEND_URL from '../../config';
 
 const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const { id } = useParams();
@@ -45,7 +46,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const fetchGroupDetails = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/groups/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -82,7 +83,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const handleJoinGroup = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/groups/${id}/join`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${id}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -106,7 +107,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const handleLeaveGroup = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/groups/${id}/leave`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${id}/leave`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -139,7 +140,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/groups/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +168,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/groups/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -215,7 +216,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/groups/${group._id}/bookmark`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${group._id}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

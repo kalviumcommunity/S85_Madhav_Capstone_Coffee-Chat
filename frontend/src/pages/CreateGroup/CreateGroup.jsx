@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './CreateGroup.css';
+import BACKEND_URL from '../../config';
 
 const CreateGroup = ({ user, setUser }) => {
   const [formData, setFormData] = useState({
@@ -205,7 +206,7 @@ const CreateGroup = ({ user, setUser }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/groups', {
+      const response = await fetch(`${BACKEND_URL}/api/groups`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

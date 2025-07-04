@@ -29,6 +29,7 @@ import cole from '../../assets/groups/cole-allen-Lqv3cjyTMS8-unsplash.jpg';
 import kelsey from '../../assets/groups/kelsey-chance-ZrhtQyGFG6s-unsplash.jpg';
 import pexels from '../../assets/groups/pexels-photo-5195502.jpeg';
 import michael from '../../assets/groups/michael-mckay-WyqSZPGxNLo-unsplash.jpg';
+import BACKEND_URL from '../../config';
 
 <style>{`
 @keyframes float {
@@ -194,7 +195,7 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
   const fetchGroups = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/api/groups');
+      const response = await fetch(`${BACKEND_URL}/api/groups`);
       if (response.ok) {
         const data = await response.json();
         setGroups(data);
@@ -256,7 +257,7 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/groups/${groupId}/join`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${groupId}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -305,7 +306,7 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/groups/${groupId}/bookmark`, {
+      const response = await fetch(`${BACKEND_URL}/api/groups/${groupId}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './CreateEvent.css';
+import BACKEND_URL from '../../config';
 
 const CreateEvent = ({ user, setUser }) => {
   const [formData, setFormData] = useState({
@@ -218,7 +219,7 @@ const CreateEvent = ({ user, setUser }) => {
         }
       };
 
-      const response = await fetch('http://localhost:3000/api/events', {
+      const response = await fetch(`${BACKEND_URL}/api/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

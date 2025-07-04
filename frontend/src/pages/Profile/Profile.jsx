@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import { FiCamera, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import BACKEND_URL from '../../config';
 
 const INTERESTS = ["Food", "Tech", "Web Dev"];
 const EMPTY_STATES = {
@@ -67,7 +68,7 @@ const Profile = ({ user, setUser }) => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/users/profile', {
+      const response = await fetch(`${BACKEND_URL}/api/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -85,7 +86,7 @@ const Profile = ({ user, setUser }) => {
   const fetchUserGroups = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/groups/user/groups', {
+      const response = await fetch(`${BACKEND_URL}/api/groups/user/groups`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -100,7 +101,7 @@ const Profile = ({ user, setUser }) => {
   const fetchUserEvents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/events/user/events', {
+      const response = await fetch(`${BACKEND_URL}/api/events/user/events`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -115,7 +116,7 @@ const Profile = ({ user, setUser }) => {
   const fetchBookmarks = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/users/bookmarks', {
+      const response = await fetch(`${BACKEND_URL}/api/users/bookmarks`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -132,7 +133,7 @@ const Profile = ({ user, setUser }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/users/profile', {
+      const response = await fetch(`${BACKEND_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ const Profile = ({ user, setUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/users/upload-profile-image', {
+      const response = await fetch(`${BACKEND_URL}/api/users/upload-profile-image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
