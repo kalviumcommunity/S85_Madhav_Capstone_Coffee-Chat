@@ -63,7 +63,7 @@ const registerUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Registration error:', err);
+    // console.error('Registration error:', err);
     res.status(500).json({ error: 'Error creating user' });
   }
 };
@@ -99,7 +99,7 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Login error:', err);
+    // console.error('Login error:', err);
     res.status(500).json({ error: 'Login error' });
   }
 };
@@ -111,7 +111,13 @@ const googleLogin = async (req, res) => {
   try {
     if (!token) return res.status(400).json({ error: "Token not provided" });
 
-    const decoded = await admin.auth().verifyIdToken(token);
+    let decoded;
+    try {
+      decoded = await admin.auth().verifyIdToken(token);
+    } catch (verifyErr) {
+      // console.error('Firebase verifyIdToken error:', verifyErr);
+      return res.status(401).json({ error: "Google login failed (token verification)" });
+    }
     const { email, name, picture } = decoded;
 
     if (!email) return res.status(400).json({ error: "No email in token" });
@@ -166,7 +172,7 @@ const googleLogin = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Google Auth Error:", err.message);
+    // console.error("❌ Google Auth Error:", err.message);
     res.status(401).json({ error: "Google login failed" });
   }
 };
@@ -179,7 +185,7 @@ const getProfile = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    console.error('Get profile error:', error);
+    // console.error('Get profile error:', error);
     res.status(500).json({ error: 'Error fetching profile' });
   }
 };
@@ -219,7 +225,7 @@ const updateProfile = async (req, res) => {
       profileImage: user.profileImage
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    // console.error('Update profile error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -249,7 +255,7 @@ const uploadProfileImage = async (req, res) => {
 
     res.json({ profileImage: result.secure_url });
   } catch (error) {
-    console.error('Upload profile image error:', error);
+    // console.error('Upload profile image error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -267,7 +273,7 @@ const getBookmarks = async (req, res) => {
       events: user.bookmarkedEvents || []
     });
   } catch (error) {
-    console.error('Get bookmarks error:', error);
+    // console.error('Get bookmarks error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -297,7 +303,7 @@ const addBookmark = async (req, res) => {
     await user.save();
     res.json({ message: 'Bookmark added successfully' });
   } catch (error) {
-    console.error('Add bookmark error:', error);
+    // console.error('Add bookmark error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -327,7 +333,7 @@ const removeBookmark = async (req, res) => {
     await user.save();
     res.json({ message: 'Bookmark removed successfully' });
   } catch (error) {
-    console.error('Remove bookmark error:', error);
+    // console.error('Remove bookmark error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

@@ -14,6 +14,12 @@ const serviceAccount = {
   client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL
 };
 
+console.log('FIREBASE ADMIN CONFIG:', {
+  project_id: process.env.FIREBASE_PROJECT_ID,
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  // Do NOT log the private key in production!
+});
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
