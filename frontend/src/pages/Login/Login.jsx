@@ -99,10 +99,9 @@ const Login = ({ setUser }) => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      
       // Get the ID token
       const idToken = await user.getIdToken();
-      
+      console.log('Google ID token:', idToken);
       // Send token to backend
       const response = await fetch(`${BACKEND_URL}/api/users/google-login`, {
         method: 'POST',
@@ -114,8 +113,8 @@ const Login = ({ setUser }) => {
           mode: 'login'
         }),
       });
-
       const data = await response.json();
+      console.log('Backend /google-login response:', data);
 
       if (response.ok) {
         localStorage.setItem('token', data.token);

@@ -81,6 +81,11 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   };
 
   const handleJoinGroup = async () => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error('Please log in to join the group.');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${BACKEND_URL}/api/groups/${id}/join`, {
@@ -96,7 +101,11 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
         fetchGroupDetails(); // Refresh group data
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Failed to join group');
+        if (error.message === 'No token provided' || error.message === 'Invalid token') {
+          toast.error('Please log in to join the group.');
+        } else {
+          toast.error(error.message || 'Failed to join group');
+        }
       }
     } catch (error) {
       console.error('Error joining group:', error);

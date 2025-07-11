@@ -11,7 +11,7 @@ import CreateGroup from './pages/CreateGroup/CreateGroup';
 import Events from './pages/Events/Events';
 import CreateEvent from './pages/CreateEvent/CreateEvent';
 import EventDetails from './pages/EventDetails/EventDetails';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, ToastBar, toast } from 'react-hot-toast';
 import Navbar from './Components/Navbar/Navbar';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
@@ -173,7 +173,30 @@ function AppRoutes() {
               },
             },
           }}
-        />
+        >
+          {(t) => (
+            <ToastBar toast={t}>
+              {({ icon, message }) => (
+                <>
+                  {icon}
+                  <span className="flex-1 ml-2">{message}</span>
+                  {t.type !== 'loading' && (
+                    <button
+                      onClick={() => toast.dismiss(t.id)}
+                      className="ml-2 rounded-full p-1 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+                      aria-label="Dismiss notification"
+                      tabIndex={0}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                        <path fillRule="evenodd" d="M10 8.586l4.95-4.95a1 1 0 111.414 1.414L11.414 10l4.95 4.95a1 1 0 01-1.414 1.414L10 11.414l-4.95 4.95a1 1 0 01-1.414-1.414L8.586 10l-4.95-4.95A1 1 0 115.05 3.636L10 8.586z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  )}
+                </>
+              )}
+            </ToastBar>
+          )}
+        </Toaster>
         <Routes>
           <Route 
             path="/" 
