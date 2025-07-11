@@ -1,6 +1,8 @@
-# ☕ Coffee Chat
+# ☕ Coffee Chat — A Community-Driven Event Discovery Platform
+
 
 A modern, real-time social platform where users can discover and join interest-based groups, create or attend events, and communicate through group/event-based chat rooms.
+
 
 ## 🚀 Features
 
@@ -10,26 +12,32 @@ A modern, real-time social platform where users can discover and join interest-b
 - **Password Reset**: Email-based password recovery
 - **Dark Mode**: Toggle between light and dark themes
 
-### 🏘️ Groups
-- **Create & Join**: Create new groups or join existing ones
-- **Categories**: Technology, Sports, Music, Art, Food, Travel, Business, Education, Health, Other
-- **Privacy Settings**: Public, Private, or Secret groups
-- **Member Management**: Admin and moderator roles
-- **Real-time Chat**: Group-based messaging with read receipts
 
-### 🎉 Events
-- **Event Creation**: Create events with detailed information
-- **RSVP System**: Going, Interested, Not Attending options
-- **Date Filtering**: Today, Tomorrow, This Week, This Month, Upcoming, Past
-- **Bookmarking**: Save events for later
-- **Event Chat**: Real-time communication for event attendees
+**Coffee Chat** is a web-based platform that connects like-minded individuals through interest-based groups and local events. Whether it’s tech meetups, book clubs, or coffee tastings, users can create, discover, and join communities aligned with their passions.
 
-### 💬 Real-time Chat
-- **Socket.IO Integration**: Real-time messaging
-- **Read Receipts**: See who has read your messages
-- **Typing Indicators**: Know when someone is typing
-- **Message Reactions**: React to messages with emojis
-- **File Sharing**: Share images and files
+🔗 **Live Demo:** [Coffee Chat Demo](https://s85-madhav-capstone-coffee-chat.onrender.com/)
+
+---
+
+## 🌐 Key Features
+
+- 🔍 **Discover and join interest-based groups**
+- 📅 **Create and manage community events**
+- 💬 **Participate in discussions and event planning**
+- 🧠 **Personalized dashboards and recommendations**
+- 🔐 **Secure authentication with JWT**
+- 📱 **Responsive and accessible user interface**
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend:** React.js
+- **Backend:** Node.js + Express.js
+- **Database:** MongoDB
+- **Authentication:** JWT-based
+- **Deployment:** AWS (EC2, S3, CloudFront)
+
 
 ### 🔍 Discovery & Search
 - **Advanced Search**: Search by name, description, location
@@ -37,10 +45,54 @@ A modern, real-time social platform where users can discover and join interest-b
 - **Sorting**: By popularity, date, name
 - **View Modes**: Grid and list views
 
-### 📱 Responsive Design
-- **Mobile-First**: Optimized for all screen sizes
-- **Modern UI**: Built with Tailwind CSS
-- **Smooth Animations**: Enhanced user experience
+
+## 📅 Capstone Execution Plan (4 Weeks)
+
+### Week 1 — *Project Setup & Level 1 Development*
+
+- ✅ **Day 1**: Repository initialization, README setup, folder structure
+- ✅ **Day 2**: Design database schemas (Users, Groups, Events)
+- ✅ **Day 3**: Develop Express API endpoints (CRUD for Groups & Events)
+- ✅ **Day 4**: Initialize React frontend with basic routing
+- ✅ **Day 5**: Create landing page & event listing components
+- ✅ **Day 6**: Implement authentication (register/login, protected routes)
+- ✅ **Day 7**: Code review, cleanup, and buffer for catch-up
+
+---
+
+### Week 2 — *Core Feature Development*
+
+- ✅ **Day 8**: Group creation and member management
+- ✅ **Day 9**: Event creation and participation flow
+- ✅ **Day 10**: Build user profile and dashboard pages
+- ✅ **Day 11**: Add comment threads for events
+- ✅ **Day 12**: Integrate backend and frontend features
+- ✅ **Day 13**: Apply consistent styling and theming
+- ✅ **Day 14**: Unit testing and integration test coverage
+
+---
+
+### Week 3 — *Advanced Features & Deployment*
+
+- 🚧 **Day 15**: Real-time notifications (group invites, event reminders)
+- 🚧 **Day 16**: Implement search and filtering (interests, location)
+- 🚧 **Day 17**: Responsive design for mobile and tablet
+- 🚧 **Day 18**: Set up AWS deployment environments
+- 🚧 **Day 19**: Deploy backend to AWS EC2
+- 🚧 **Day 20**: Deploy frontend to AWS S3 + CloudFront
+- 🚧 **Day 21**: Final checks and deployment validation
+
+---
+
+### Week 4 — *Polishing, Testing & Presentation*
+
+- 🔧 **Day 22**: Final optimizations, bug fixes, and performance tweaks
+- 📄 **Day 23**: Complete project documentation
+- 🧪 **Day 24**: Full-scale user testing and QA
+- 🎥 **Day 25**: Record pitch video and prepare demo assets
+- 📝 **Day 26**: Submit final project deliverables
+- 📢 **Day 27–28**: Present project and gather feedback
+
 
 ## 🛠️ Tech Stack
 
@@ -300,17 +352,14 @@ For support, email support@coffeechat.com or create an issue in the repository.
 
 ## 🔮 Future Features
 
-- [ ] Video calls
-- [ ] Push notifications
-- [ ] Mobile app
-- [ ] Advanced analytics
-- [ ] Group polls
-- [ ] Event reminders
-- [ ] Social sharing
-- [ ] Advanced search filters
-- [ ] Group events integration
-- [ ] Payment integration for paid events
+## 🚀 Project Goals
+
+- ✅ Build a fully functional full-stack MERN application
+- ✅ Demonstrate clean code, scalable architecture, and intuitive UI/UX
+- ✅ Gain hands-on experience with deployment and cloud infrastructure
+- ✅ Deliver a production-ready portfolio project for job interviews
 
 ---
 
-**Built with ❤️ by the Coffee Chat Team**
+> Thank you for checking out **Coffee Chat** — stay tuned for upcoming updates and enhancements!
+
