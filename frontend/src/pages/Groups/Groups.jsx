@@ -169,7 +169,7 @@ function VerticalCarousel() {
   );
 }
 
-const Groups = ({ user, setUser, groups, setGroups, setLoading }) => {
+const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
   const [filteredGroups, setFilteredGroups] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -641,7 +641,7 @@ const Groups = ({ user, setUser, groups, setGroups, setLoading }) => {
                 </Link>
               </div>
             )}
-            {groups.length === 0 ? (
+            {(!groups || groups.length === 0) ? (
               <div className="col-span-full text-center py-16">
                 <Users className="w-12 h-12 mx-auto text-orange-400 mb-4" />
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">No groups found</h3>
@@ -653,7 +653,7 @@ const Groups = ({ user, setUser, groups, setGroups, setLoading }) => {
             )}
           </div>
         ) : (
-          groups.length === 0 ? (
+          (!groups || groups.length === 0) ? (
             <div className="col-span-full text-center py-16">
               <Users className="w-12 h-12 mx-auto text-orange-400 mb-4" />
               <h3 className="text-2xl font-bold text-gray-900 mb-3">No groups found</h3>
