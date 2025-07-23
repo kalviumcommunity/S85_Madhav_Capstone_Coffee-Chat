@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { MapPin, Users, Calendar, Eye, Clock } from 'lucide-react';
 import BACKEND_URL from '../../config';
@@ -7,11 +7,10 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-const SearchResults = ({ user, setUser }) => {
+const SearchResults = ({ user, setUser, setLoading }) => {
   const query = useQuery().get('query') || '';
   const [groups, setGroups] = useState([]);
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!query) return;
@@ -38,7 +37,7 @@ const SearchResults = ({ user, setUser }) => {
       );
       setLoading(false);
     });
-  }, [query]);
+  }, [query, setLoading]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50 pt-24 pb-16 px-4">

@@ -25,11 +25,10 @@ import toast from 'react-hot-toast';
 import './EventDetails.css';
 import BACKEND_URL from '../../config';
 
-const EventDetails = ({ user, setUser }) => {
+const EventDetails = ({ user, setUser, setLoading }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -47,8 +46,9 @@ const EventDetails = ({ user, setUser }) => {
   const [members, setMembers] = useState([]);
 
   useEffect(() => {
+    setLoading(true);
     fetchEventDetails();
-  }, [id]);
+  }, [id, setLoading]);
 
   const fetchEventDetails = async () => {
     try {
@@ -328,24 +328,6 @@ const EventDetails = ({ user, setUser }) => {
       toast.error('Failed to bookmark event');
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
-        <Navbar user={user} setUser={setUser} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-          <div className="animate-pulse">
-            <div className="bg-secondary-200 dark:bg-secondary-700 h-8 rounded w-1/3 mb-4"></div>
-            <div className="bg-secondary-200 dark:bg-secondary-700 h-64 rounded-lg mb-6"></div>
-            <div className="space-y-4">
-              <div className="bg-secondary-200 dark:bg-secondary-700 h-4 rounded w-3/4"></div>
-              <div className="bg-secondary-200 dark:bg-secondary-700 h-4 rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!event) {
     return (

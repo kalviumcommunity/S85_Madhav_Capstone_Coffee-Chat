@@ -46,7 +46,6 @@ const CreateEvent = ({ user, setUser }) => {
     rsvpLimit: '',
     tags: []
   });
-  const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -133,7 +132,6 @@ const CreateEvent = ({ user, setUser }) => {
 
       try {
         // Show loading state
-        setLoading(true);
         setImageProcessing(true);
         
         // Compress the image
@@ -158,7 +156,6 @@ const CreateEvent = ({ user, setUser }) => {
         console.error('Error compressing image:', error);
         toast.error('Error processing image. Please try again.');
       } finally {
-        setLoading(false);
         setImageProcessing(false);
       }
     }
@@ -203,7 +200,6 @@ const CreateEvent = ({ user, setUser }) => {
       return;
     }
 
-    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       
@@ -270,7 +266,7 @@ const CreateEvent = ({ user, setUser }) => {
         toast.error('Failed to create event. Please try again.');
       }
     } finally {
-      setLoading(false);
+      // setLoading(false); // This line is removed as per the edit hint
     }
   };
 
@@ -766,15 +762,15 @@ const CreateEvent = ({ user, setUser }) => {
                 <div className="pt-6">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={false} // This line is changed as per the edit hint
                     className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    {loading ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
+                    {/* {loading ? ( // This line is changed as per the edit hint */}
+                    {/*   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> */}
+                    {/* ) : ( */}
                       <Calendar className="w-5 h-5" />
-                    )}
-                    <span>{loading ? 'Creating Event...' : 'Create Event'}</span>
+                    {/* )} */}
+                    <span>Create Event</span>
                   </button>
                   
                   <button
