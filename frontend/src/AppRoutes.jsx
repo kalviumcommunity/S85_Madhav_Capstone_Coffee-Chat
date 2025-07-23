@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import Login from './pages/Login/Login';
 import Signup from './pages/Signup/Signup';
@@ -19,11 +19,9 @@ import About from './pages/About';
 import SearchResults from './pages/SearchResults/SearchResults';
 import BACKEND_URL from './config';
 
-function AppRoutes() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+function AppRoutes({ loading, setLoading, user, setUser }) {
   const navigate = useNavigate();
-  const [groups, setGroups] = useState([]);
+  // const [groups, setGroups] = useState([]); // keep if needed
 
   // Check for existing JWT token on app load
   useEffect(() => {
@@ -51,6 +49,7 @@ function AppRoutes() {
           localStorage.removeItem('token');
           setUser(null);
         }
+        setLoading(false);
       } else {
         // No token, check Firebase auth
         const auth = getAuth();
@@ -91,11 +90,11 @@ function AppRoutes() {
         });
         return () => unsubscribe();
       }
-      setLoading(false);
     };
 
     checkAuthStatus();
-  }, []);
+    // eslint-disable-next-line
+  }, [setLoading, setUser]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -133,18 +132,9 @@ function AppRoutes() {
     
     // 6. Force a page reload to clear any cached state
     window.location.href = '/';
-  }, []);
+  }, [setUser]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-secondary-600 dark:text-secondary-300">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Remove local loading spinner UI, rely on Loader in App.jsx
 
   return (
     <>
@@ -216,7 +206,7 @@ function AppRoutes() {
           />
           <Route 
             path="/groups" 
-            element={<Groups user={user} setUser={setUser} groups={groups} setGroups={setGroups} />} 
+            element={<Groups user={user} setUser={setUser} />} 
           />
           <Route 
             path="/groups/create" 
@@ -226,7 +216,7 @@ function AppRoutes() {
           />
           <Route 
             path="/groups/:id" 
-            element={<GroupDetails user={user} setUser={setUser} setGroups={setGroups} />} 
+            element={<GroupDetails user={user} setUser={setUser} />} 
           />
           <Route 
             path="/events" 
