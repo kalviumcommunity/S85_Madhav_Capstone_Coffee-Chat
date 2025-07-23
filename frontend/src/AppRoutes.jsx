@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import Login from './pages/Login/Login';
 import Signup from './pages/Signup/Signup';
@@ -21,7 +21,7 @@ import BACKEND_URL from './config';
 
 function AppRoutes({ loading, setLoading, user, setUser }) {
   const navigate = useNavigate();
-  // const [groups, setGroups] = useState([]); // keep if needed
+  const [groups, setGroups] = useState([]);
 
   // Check for existing JWT token on app load
   useEffect(() => {
@@ -206,7 +206,7 @@ function AppRoutes({ loading, setLoading, user, setUser }) {
           />
           <Route 
             path="/groups" 
-            element={<Groups user={user} setUser={setUser} />} 
+            element={<Groups user={user} setUser={setUser} groups={groups} setGroups={setGroups} setLoading={setLoading} />} 
           />
           <Route 
             path="/groups/create" 
@@ -216,11 +216,11 @@ function AppRoutes({ loading, setLoading, user, setUser }) {
           />
           <Route 
             path="/groups/:id" 
-            element={<GroupDetails user={user} setUser={setUser} />} 
+            element={<GroupDetails user={user} setUser={setUser} setGroups={setGroups} setLoading={setLoading} />} 
           />
           <Route 
             path="/events" 
-            element={<Events user={user} setUser={setUser} />} 
+            element={<Events user={user} setUser={setUser} setLoading={setLoading} />} 
           />
           <Route 
             path="/events/create" 
@@ -239,7 +239,7 @@ function AppRoutes({ loading, setLoading, user, setUser }) {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/about" element={<About />} />
-          <Route path="/search" element={<SearchResults user={user} setUser={setUser} />} />
+          <Route path="/search" element={<SearchResults user={user} setUser={setUser} setLoading={setLoading} />} />
         </Routes>
       </div>
     </>
