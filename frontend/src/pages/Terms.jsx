@@ -119,7 +119,7 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
       {/* Header with Logo and Back Link */}
-      <header className="w-full py-8 bg-white shadow-sm flex flex-col items-center">
+      <header className="w-full py-8 bg-white shadow-sm flex flex-col items-center pt-24">
         <img src="/Main Logo.png" alt="Coffee Chat Logo" className="h-12 mb-2" />
         <Link to="/" className="text-orange-600 hover:underline text-sm">← Back to Home</Link>
       </header>

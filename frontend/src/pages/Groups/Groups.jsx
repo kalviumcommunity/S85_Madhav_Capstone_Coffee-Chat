@@ -24,6 +24,7 @@ import {
 import toast from 'react-hot-toast';
 import './Groups.css';
 import BACKEND_URL from '../../config';
+import { motion } from "framer-motion";
 
   const CAROUSEL_IMAGES = ["https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632079/michael-mckay-WyqSZPGxNLo-unsplash_b8eyuk.jpg",
     "https://res.cloudinary.com/dfgzjz1by/image/upload/v1751632078/mike-kilcoyne-WhvVTv4Hif8-unsplash_k2l255.jpg",
@@ -641,7 +642,7 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
                 </Link>
               </div>
             )}
-            {(!groups || groups.length === 0) ? (
+            {(!filteredGroups || filteredGroups.length === 0) ? (
               <div className="col-span-full text-center py-16">
                 <Users className="w-12 h-12 mx-auto text-orange-400 mb-4" />
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">No groups found</h3>
@@ -649,11 +650,11 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
                 {user && <Link to="/groups/create" className="gradient-premium-orange text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 inline-flex items-center space-x-2"><Plus className="w-5 h-5" /><span>Create Your First Group</span></Link>}
               </div>
             ) : (
-              groups.map((group) => <GroupListCard key={group._id} group={group} />)
+              filteredGroups.map((group) => <GroupListCard key={group._id} group={group} />)
             )}
           </div>
         ) : (
-          (!groups || groups.length === 0) ? (
+          (!filteredGroups || filteredGroups.length === 0) ? (
             <div className="col-span-full text-center py-16">
               <Users className="w-12 h-12 mx-auto text-orange-400 mb-4" />
               <h3 className="text-2xl font-bold text-gray-900 mb-3">No groups found</h3>
@@ -662,7 +663,7 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {groups.map((group, idx) => (
+              {filteredGroups.map((group, idx) => (
                 <div key={group._id} className="glass-card rounded-2xl shadow-xl p-0 overflow-hidden animate-fade-slide-up" style={{ animationDelay: `${0.1 + idx * 0.07}s` }}>
                   <GroupCard group={group} />
                 </div>
@@ -672,16 +673,64 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
         )}
       </div>
       {/* CTA Motivation Box */}
-      <section className="max-w-3xl mx-auto my-16 px-6 py-12 rounded-3xl shadow-2xl" style={{ background: 'linear-gradient(135deg, #FFE2BA, #FFD2A1)' }}>
-        <div className="flex flex-col items-center text-center gap-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#2E2E2E] mb-2">Can't find the right group? Start one and bring like-minded people together.</h2>
-          <p className="text-lg text-[#2E2E2E]/80 mb-4">Build a space around your passion — it's easier than you think.<br/>Be the reason someone feels connected.</p>
-          <Link to="/groups/create" className="gradient-premium-orange text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 mt-2">
-            <Plus className="w-5 h-5" />
-            <span>Create Group</span>
-          </Link>
+      <motion.section
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.6 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="
+          max-w-md mx-auto my-16 px-8 py-10
+          bg-[#FFF7ED] border border-[#FFE0B2]
+          rounded-2xl shadow-md
+          flex flex-col items-center text-center space-y-6
+          transition-all duration-300
+          hover:-translate-y-1 hover:shadow-lg
+        "
+      >
+        {/* Blurred circular background behind icon */}
+        <div className="relative flex items-center justify-center mb-2">
+          <span
+            className="
+              absolute inset-0
+              w-20 h-20 mx-auto
+              rounded-full
+              bg-[#FFEDD5] opacity-70
+              blur-2xl
+              z-0
+            "
+            aria-hidden="true"
+          />
+          <motion.div
+            whileHover={{ scale: 1.13, y: -2 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            className="relative z-10"
+          >
+            <Users size={40} strokeWidth={1.5} className="text-[#FF6F00]" />
+          </motion.div>
         </div>
-      </section>
+        <h2 className="text-xl font-bold text-gray-900">
+          Can't find the right group?
+        </h2>
+        <p className="text-gray-600 text-base">
+          Start one and bring like-minded people together.
+        </p>
+        <motion.a
+          whileHover={{ scale: 1.05, boxShadow: "0 0 0 4px #FFECB3" }}
+          transition={{ type: "spring", stiffness: 300, damping: 18 }}
+          href="/groups/create"
+          className="
+            mt-4 bg-[#FF6F00] hover:bg-[#ff8800]
+            text-white font-bold rounded-full
+            px-6 py-2
+            transition-all duration-200
+            shadow-sm focus:outline-none
+            focus:ring-2 focus:ring-[#FF6F00] focus:ring-offset-2
+            inline-block
+          "
+        >
+          + Create Group
+        </motion.a>
+      </motion.section>
     </div>
   );
 };
