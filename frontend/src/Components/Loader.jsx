@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Player } from 'lottie-react';
+import Lottie from 'lottie-react';
 import './Loader.css';
 // Update the path below if your Lottie JSON is elsewhere
 import coffeeLottie from '../assets/Coffee love.json';
@@ -31,10 +31,10 @@ const Loader = ({ loading }) => {
       className={`loader-overlay${loading ? '' : ' loader-fade-out'}`}
     >
       <div className="loader-content">
-        <Player
-          autoplay
+        <Lottie
+          animationData={coffeeLottie}
           loop
-          src={coffeeLottie}
+          autoplay
           className="loader-lottie"
           style={{ width: 220, height: 220 }}
         />

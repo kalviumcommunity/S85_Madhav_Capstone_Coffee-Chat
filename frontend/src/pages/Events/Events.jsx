@@ -92,10 +92,9 @@ function HorizontalCarousel() {
   );
 }
 
-const Events = ({ user, setUser }) => {
+const Events = ({ user, setUser, setLoading }) => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCity, setSelectedCity] = useState('All');
@@ -120,8 +119,9 @@ const Events = ({ user, setUser }) => {
   ];
 
   useEffect(() => {
+    setLoading(true);
     fetchEvents();
-  }, []);
+  }, [setLoading]);
 
   useEffect(() => {
     filterAndSortEvents();
@@ -129,7 +129,6 @@ const Events = ({ user, setUser }) => {
 
   const fetchEvents = async () => {
     try {
-      setLoading(true);
       const response = await fetch(`${BACKEND_URL}/api/events`);
       if (response.ok) {
         const data = await response.json();
@@ -867,29 +866,7 @@ const Events = ({ user, setUser }) => {
         </div>
 
         {/* Events Grid/List */}
-        {loading ? (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-            {[...Array(6)].map((_, index) => (
-              <div key={index} className="animate-pulse">
-                {viewMode === 'grid' ? (
-                  <>
-                    <div className="bg-gray-200 h-48 rounded-2xl mb-4"></div>
-                    <div className="bg-gray-200 h-6 rounded mb-3"></div>
-                    <div className="bg-gray-200 h-4 rounded w-2/3"></div>
-                  </>
-                ) : (
-                  <div className="flex items-center space-x-6 p-6 bg-white/50 rounded-2xl">
-                    <div className="bg-gray-200 w-24 h-24 rounded-xl"></div>
-                    <div className="flex-1 space-y-3">
-                      <div className="bg-gray-200 h-5 rounded w-1/3"></div>
-                      <div className="bg-gray-200 h-4 rounded w-2/3"></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : filteredEvents.length === 0 ? (
+        {filteredEvents.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full flex items-center justify-center mx-auto mb-6">
               <Calendar className="w-12 h-12 text-orange-600" />

@@ -169,9 +169,8 @@ function VerticalCarousel() {
   );
 }
 
-const Groups = ({ user, setUser, groups, setGroups }) => {
+const Groups = ({ user, setUser, groups, setGroups, setLoading }) => {
   const [filteredGroups, setFilteredGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCity, setSelectedCity] = useState('All');
@@ -185,8 +184,9 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
   const cities = ['All', 'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose'];
 
   useEffect(() => {
+    setLoading(true);
     fetchGroups();
-  }, []);
+  }, [setLoading]);
 
   useEffect(() => {
     filterAndSortGroups();
@@ -194,7 +194,6 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
 
   const fetchGroups = async () => {
     try {
-      setLoading(true);
       const response = await fetch(`${BACKEND_URL}/api/groups`);
       if (response.ok) {
         const data = await response.json();
@@ -642,9 +641,7 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
                 </Link>
               </div>
             )}
-            {loading ? (
-              [...Array(6)].map((_, i) => <div key={i} className="h-32 bg-white/60 rounded-2xl shadow animate-pulse" />)
-            ) : filteredGroups.length === 0 ? (
+            {groups.length === 0 ? (
               <div className="col-span-full text-center py-16">
                 <Users className="w-12 h-12 mx-auto text-orange-400 mb-4" />
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">No groups found</h3>
@@ -652,13 +649,11 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
                 {user && <Link to="/groups/create" className="gradient-premium-orange text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 inline-flex items-center space-x-2"><Plus className="w-5 h-5" /><span>Create Your First Group</span></Link>}
               </div>
             ) : (
-              filteredGroups.map((group) => <GroupListCard key={group._id} group={group} />)
+              groups.map((group) => <GroupListCard key={group._id} group={group} />)
             )}
           </div>
         ) : (
-          loading ? (
-            [...Array(6)].map((_, i) => <div key={i} className="h-64 bg-white/60 rounded-2xl shadow animate-pulse"></div>)
-          ) : filteredGroups.length === 0 ? (
+          groups.length === 0 ? (
             <div className="col-span-full text-center py-16">
               <Users className="w-12 h-12 mx-auto text-orange-400 mb-4" />
               <h3 className="text-2xl font-bold text-gray-900 mb-3">No groups found</h3>
@@ -667,7 +662,7 @@ const Groups = ({ user, setUser, groups, setGroups }) => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredGroups.map((group, idx) => (
+              {groups.map((group, idx) => (
                 <div key={group._id} className="glass-card rounded-2xl shadow-xl p-0 overflow-hidden animate-fade-slide-up" style={{ animationDelay: `${0.1 + idx * 0.07}s` }}>
                   <GroupCard group={group} />
                 </div>

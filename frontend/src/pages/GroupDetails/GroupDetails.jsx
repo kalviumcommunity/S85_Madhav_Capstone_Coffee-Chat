@@ -25,11 +25,10 @@ import './GroupDetails.css';
 import { Link } from 'react-router-dom';
 import BACKEND_URL from '../../config';
 
-const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
+const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [group, setGroup] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isMember, setIsMember] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
   const [activeTab, setActiveTab] = useState('about');
@@ -40,8 +39,9 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
   const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     fetchGroupDetails();
-  }, [id]);
+  }, [id, setLoading]);
 
   const fetchGroupDetails = async () => {
     try {
@@ -262,24 +262,6 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups }) => {
     { id: 'members', label: 'Members', icon: Users },
     { id: 'chat', label: 'Chat', icon: MessageCircle }
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
-        <Navbar user={user} setUser={setUser} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-          <div className="animate-pulse">
-            <div className="bg-secondary-200 dark:bg-secondary-700 h-8 rounded w-1/3 mb-4"></div>
-            <div className="bg-secondary-200 dark:bg-secondary-700 h-64 rounded-lg mb-6"></div>
-            <div className="space-y-4">
-              <div className="bg-secondary-200 dark:bg-secondary-700 h-4 rounded w-3/4"></div>
-              <div className="bg-secondary-200 dark:bg-secondary-700 h-4 rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!group) {
     return (

@@ -39,9 +39,8 @@ const EMPTY_STATES = {
   }
 };
 
-const Profile = ({ user, setUser }) => {
+const Profile = ({ user, setUser, setLoading }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [userGroups, setUserGroups] = useState([]);
   const [userEvents, setUserEvents] = useState([]);
   const [bookmarkedEvents, setBookmarkedEvents] = useState([]);
@@ -60,10 +59,11 @@ const Profile = ({ user, setUser }) => {
   });
 
   useEffect(() => {
+    setLoading(true);
     fetchUserGroups();
     fetchUserEvents();
     fetchBookmarks();
-  }, [user]);
+  }, [user, setLoading]);
 
   const fetchUserData = async () => {
     try {
