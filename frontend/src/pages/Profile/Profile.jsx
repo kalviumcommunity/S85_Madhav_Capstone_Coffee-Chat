@@ -47,6 +47,7 @@ const Profile = ({ user, setUser, setLoading = () => {} }) => {
   const [bookmarkedEvents, setBookmarkedEvents] = useState([]);
   const [bookmarkedGroups, setBookmarkedGroups] = useState([]);
   const [activeTab, setActiveTab] = useState('groups');
+  const [localLoading, setLocalLoading] = useState(false); // Local loading state for actions
   const navigate = useNavigate();
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -134,6 +135,7 @@ const Profile = ({ user, setUser, setLoading = () => {} }) => {
   };
 
   const handleSave = async () => {
+    setLocalLoading(true);
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -159,6 +161,7 @@ const Profile = ({ user, setUser, setLoading = () => {} }) => {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
     } finally {
+      setLocalLoading(false);
       setLoading(false);
     }
   };
@@ -273,8 +276,8 @@ const Profile = ({ user, setUser, setLoading = () => {} }) => {
                     <textarea value={formData.bio} onChange={e => setFormData({ ...formData, bio: e.target.value })} className="w-full border rounded px-3 py-2 text-sm" rows={3} />
                   </div>
                   <div className="flex gap-2 mt-2">
-                    <button onClick={handleSave} disabled={loading} className="bg-orange-500 text-white rounded-full px-4 py-2 flex items-center gap-2 hover:bg-orange-600 transition">
-                      {loading ? <FiLoader className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />} Save
+                    <button onClick={handleSave} disabled={localLoading} className="bg-orange-500 text-white rounded-full px-4 py-2 flex items-center gap-2 hover:bg-orange-600 transition">
+                      {localLoading ? <FiLoader className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />} Save
                     </button>
                     <button
                       onClick={() => {
