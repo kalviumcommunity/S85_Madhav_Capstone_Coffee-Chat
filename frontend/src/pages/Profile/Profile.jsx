@@ -39,7 +39,8 @@ const EMPTY_STATES = {
   }
 };
 
-const Profile = ({ user, setUser, setLoading }) => {
+const Profile = ({ user, setUser, setLoading = () => {} }) => {
+  console.log('Profile props:', { user, setUser, setLoading });
   const [isEditing, setIsEditing] = useState(false);
   const [userGroups, setUserGroups] = useState([]);
   const [userEvents, setUserEvents] = useState([]);
@@ -60,10 +61,13 @@ const Profile = ({ user, setUser, setLoading }) => {
 
   useEffect(() => {
     setLoading(true);
-    fetchUserGroups();
-    fetchUserEvents();
-    fetchBookmarks();
-  }, [user, setLoading]);
+    Promise.all([
+      fetchUserGroups(),
+      fetchUserEvents(),
+      fetchBookmarks()
+    ]).finally(() => setLoading(false));
+    // eslint-disable-next-line
+  }, []); // Only run once on mount
 
   const fetchUserData = async () => {
     try {
@@ -208,6 +212,12 @@ const Profile = ({ user, setUser, setLoading }) => {
   ];
 
   if (!user) {
+    console.log('Profile: user is', user, 'showing spinner or redirecting');
+    // If not loading, redirect to login
+    if (typeof setLoading === 'function' && setLoading.name !== 'noop' && !window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+      return null;
+    }
     return (
       <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900">
         <Navbar user={user} setUser={setUser} />
@@ -220,6 +230,8 @@ const Profile = ({ user, setUser, setLoading }) => {
       </div>
     );
   }
+
+  console.log('Rendering profile content for user:', user);
 
   return (
     <div className="min-h-screen pt-20" style={{ background: 'linear-gradient(to bottom right, #fffaf3, #fef6f1)' }}>

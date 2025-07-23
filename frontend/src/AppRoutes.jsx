@@ -234,7 +234,7 @@ function AppRoutes({ loading, setLoading, user, setUser }) {
           />
           <Route 
             path="/profile" 
-            element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" replace />} 
+            element={user ? <Profile user={user} setUser={setUser} setLoading={setLoading} /> : <Navigate to="/login" replace />} 
           />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
