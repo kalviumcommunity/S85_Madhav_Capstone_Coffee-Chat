@@ -4,6 +4,13 @@
 A modern, real-time social platform where users can discover and join interest-based groups, create or attend events, and communicate through group/event-based chat rooms.
 
 
+<p align="center">
+  <a href="https://coffeechatweb.netlify.app/" target="_blank">
+    <img src="https://img.shields.io/badge/Live Demo-Coffee Chat ☕-darkred?style=for-the-badge&logo=firefox" />
+  </a>
+</p>
+
+
 ## 🚀 Features
 
 ### 👥 User Management
