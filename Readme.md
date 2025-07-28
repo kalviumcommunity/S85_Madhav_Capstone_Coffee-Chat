@@ -22,7 +22,7 @@ A modern, real-time social platform where users can discover and join interest-b
 
 **Coffee Chat** is a web-based platform that connects like-minded individuals through interest-based groups and local events. Whether it’s tech meetups, book clubs, or coffee tastings, users can create, discover, and join communities aligned with their passions.
 
-🔗 **Live Demo:** [Coffee Chat Demo](https://s85-madhav-capstone-coffee-chat.onrender.com/)
+🔗 **Live Demo:** [Coffee Chat Demo](https://coffeechatweb.netlify.app/)
 
 ---
 
