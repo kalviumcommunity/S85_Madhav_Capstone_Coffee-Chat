@@ -18,7 +18,8 @@ import {
   Edit,
   Trash2,
   Unlock,
-  Lock
+  Lock,
+  Clock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './GroupDetails.css';
@@ -37,6 +38,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [editLoading, setEditLoading] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -55,9 +57,19 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
       if (response.ok) {
         const groupData = await response.json();
         setGroup(groupData);
-        setIsMember(groupData.isMember || groupData.members.some(member => member._id === user?._id));
+        // Check if user is a member (including creator)
+        const isUserMember = groupData.isMember || groupData.members.some(member => member._id === user?._id);
+        setIsMember(isUserMember);
         setIsCreator(groupData.createdBy._id === user?._id);
         setMembers(groupData.members);
+        
+        // Check if user has a pending request
+        if (groupData.pendingRequests && user) {
+          const hasRequest = groupData.pendingRequests.some(request => 
+            request.userId === user._id
+          );
+          setHasPendingRequest(hasRequest);
+        }
         
         // Set edit form data
         setEditForm({
@@ -96,8 +108,14 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
       });
 
       if (response.ok) {
-        setIsMember(true);
-        toast.success('Successfully joined the group!');
+        const data = await response.json();
+        if (data.message === 'Request sent — waiting for organizer approval') {
+          setHasPendingRequest(true);
+          toast.success('Request sent — waiting for organizer approval');
+        } else {
+          setIsMember(true);
+          toast.success('Successfully joined the group!');
+        }
         fetchGroupDetails(); // Refresh group data
       } else {
         const error = await response.json();
@@ -134,6 +152,30 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
     } catch (error) {
       console.error('Error leaving group:', error);
       toast.error('Failed to leave group');
+    }
+  };
+
+  const handleWithdrawRequest = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BACKEND_URL}/api/groups/${id}/withdraw-request`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setHasPendingRequest(false);
+        toast.success('Request withdrawn successfully');
+        fetchGroupDetails(); // Refresh group data
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to withdraw request');
+      }
+    } catch (error) {
+      console.error('Error withdrawing request:', error);
+      toast.error('Failed to withdraw request');
     }
   };
 
@@ -304,11 +346,11 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
                   {group.category}
                 </span>
                 <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm ${
-                  group.privacy === 'Public' 
+                  group.privacy === 'public' 
                     ? 'bg-green-100 text-green-700 border border-green-200' 
                     : 'bg-red-100 text-red-700 border border-red-200'
                 }`}>
-                  {group.privacy === 'Public' ? '🔓 Public' : '🔒 Private'}
+                  {group.privacy === 'public' ? '🔓 Public' : '🔒 Private'}
                 </span>
                 {isMember && (
                   <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium shadow-sm border border-green-200">
@@ -341,6 +383,15 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
             
             {isCreator && (
               <>
+                {group.privacy === 'private' && (
+                  <button
+                    onClick={() => navigate(`/groups/${id}/manage-requests`)}
+                    className="btn-outline flex items-center space-x-2"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>Manage Requests</span>
+                  </button>
+                )}
                 <button
                   onClick={() => setShowEditModal(true)}
                   className="btn-outline flex items-center space-x-2"
@@ -462,7 +513,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
                         
                         <div className="flex items-center space-x-3">
                           <div className="w-5 h-5 flex items-center justify-center">
-                            {group.privacy === 'Public' ? (
+                            {group.privacy === 'public' ? (
                               <Unlock className="w-5 h-5 text-green-600" />
                             ) : (
                               <Lock className="w-5 h-5 text-red-600" />
@@ -471,7 +522,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
                           <div>
                             <p className="text-sm text-secondary-500 dark:text-secondary-400">Privacy</p>
                             <p className="font-medium text-secondary-900 dark:text-white">
-                              {group.privacy}
+                              {group.privacy === 'public' ? 'Public' : 'Private'}
                             </p>
                           </div>
                         </div>
@@ -532,10 +583,10 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
               {/* Join/Leave Section */}
-              {!isCreator && (
+              {(!isCreator || (isCreator && isMember)) && (
                 <div className="bg-white dark:bg-secondary-800 rounded-xl shadow-sm p-6">
                   <h3 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
-                    Join This Group
+                    {isCreator ? 'Group Membership' : 'Join This Group'}
                   </h3>
                   
                   {/* Current Status Display */}
@@ -546,8 +597,12 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
                           <Users className="w-4 h-4 text-green-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-green-800 dark:text-green-200">You're a member!</p>
-                          <p className="text-sm text-green-600 dark:text-green-300">You can participate in discussions</p>
+                          <p className="font-medium text-green-800 dark:text-green-200">
+                            {isCreator ? 'You\'re the organizer!' : 'You\'re a member!'}
+                          </p>
+                          <p className="text-sm text-green-600 dark:text-green-300">
+                            {isCreator ? 'You can manage this group and participate in discussions' : 'You can participate in discussions'}
+                          </p>
                         </div>
                       </div>
                     ) : (
@@ -565,14 +620,32 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
 
                   {/* Join/Leave Button */}
                   <div className="space-y-3">
-                    {!isMember ? (
-                      <button
-                        onClick={handleJoinGroup}
-                        className="w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-primary-600 hover:bg-primary-700 text-white"
-                      >
-                        <Users className="w-4 h-4 inline mr-2" />
-                        Join Group
-                      </button>
+                    {!isMember && !isCreator ? (
+                      hasPendingRequest ? (
+                        <div className="space-y-2">
+                          <button
+                            disabled
+                            className="w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-gray-400 text-white cursor-not-allowed"
+                          >
+                            <Clock className="w-4 h-4 inline mr-2" />
+                            Request Sent
+                          </button>
+                          <button
+                            onClick={handleWithdrawRequest}
+                            className="w-full px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-red-500 hover:bg-red-600 text-white text-sm"
+                          >
+                            Withdraw Request
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleJoinGroup}
+                          className="w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-primary-600 hover:bg-primary-700 text-white"
+                        >
+                          <Users className="w-4 h-4 inline mr-2" />
+                          {group.privacy === 'private' ? 'Request to Join' : 'Join Group'}
+                        </button>
+                      )
                     ) : (
                       <button
                         onClick={handleLeaveGroup}
@@ -603,7 +676,7 @@ const GroupDetails = ({ user, setUser, onBookmarkSync, setGroups, setLoading }) 
                   <div className="flex justify-between items-center">
                     <span className="text-secondary-600 dark:text-secondary-400">Privacy</span>
                     <span className="font-semibold text-secondary-900 dark:text-white">
-                      {group.privacy}
+                      {group.privacy === 'public' ? 'Public' : 'Private'}
                     </span>
                   </div>
                   

@@ -7,6 +7,7 @@ import Home from './Components/Home/Home';
 import Profile from './pages/Profile/Profile';
 import Groups from './pages/Groups/Groups';
 import GroupDetails from './pages/GroupDetails/GroupDetails';
+import ManageRequests from './pages/GroupDetails/ManageRequests';
 import CreateGroup from './pages/CreateGroup/CreateGroup';
 import Events from './pages/Events/Events';
 import CreateEvent from './pages/CreateEvent/CreateEvent';
@@ -219,6 +220,12 @@ function AppRoutes({ loading, setLoading, user, setUser }) {
             element={<GroupDetails user={user} setUser={setUser} setGroups={setGroups} setLoading={setLoading} />} 
           />
           <Route 
+            path="/groups/:id/manage-requests" 
+            element={
+              user ? <ManageRequests user={user} setUser={setUser} setLoading={setLoading} /> : <Navigate to="/login" replace />
+            } 
+          />
+          <Route 
             path="/events" 
             element={<Events user={user} setUser={setUser} setLoading={setLoading} />} 
           />
@@ -230,7 +237,7 @@ function AppRoutes({ loading, setLoading, user, setUser }) {
           />
           <Route 
             path="/events/:id" 
-            element={<EventDetails user={user} setUser={setUser} />} 
+            element={<EventDetails user={user} setUser={setUser} setLoading={setLoading} />} 
           />
           <Route 
             path="/profile" 

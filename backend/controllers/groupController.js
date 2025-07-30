@@ -42,7 +42,8 @@ const getGroupById = async (req, res) => {
   try {
     const group = await Group.findById(req.params.id)
       .populate('createdBy', 'name email profileImage')
-      .populate('members', 'name email profileImage location');
+      .populate('members', 'name email profileImage location')
+      .populate('pendingRequests.userId', 'name email profileImage');
 
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
@@ -106,7 +107,7 @@ const getUserGroups = async (req, res) => {
 
 const createGroup = async (req, res) => {
   try {
-    const { name, description, category, city, image } = req.body;
+    const { name, description, category, city, image, privacy, enableChat, enableEvents, rules, tags } = req.body;
 
     // Validate required fields
     if (!name || !description || !category || !city) {
@@ -121,6 +122,11 @@ const createGroup = async (req, res) => {
       category,
       city,
       image,
+      privacy: privacy || 'public',
+      chatEnabled: enableChat !== false, // Default to true if not specified
+      eventCreationEnabled: enableEvents !== false, // Default to true if not specified
+      rules: rules ? [rules] : [],
+      tags: tags || [],
       createdBy: req.user.userId, // Use userId from JWT token
       members: [req.user.userId] // Creator is automatically a member
     });
@@ -152,10 +158,32 @@ const joinGroup = async (req, res) => {
       return res.status(400).json({ message: 'Already a member of this group' });
     }
 
-    group.members.push(req.user.userId);
-    await group.save();
+    // Check if user already has a pending request
+    const hasPendingRequest = group.pendingRequests.some(request => 
+      request.userId.toString() === req.user.userId.toString()
+    );
+    
+    if (hasPendingRequest) {
+      return res.status(400).json({ message: 'You already have a pending request to join this group' });
+    }
 
-    res.status(200).json({ message: 'Successfully joined group' });
+    // Handle based on privacy setting
+    if (group.privacy === 'public') {
+      // Public group - add user directly to members
+      group.members.push(req.user.userId);
+      await group.save();
+      res.status(200).json({ message: 'Successfully joined group' });
+    } else if (group.privacy === 'private') {
+      // Private group - add user to pending requests
+      group.pendingRequests.push({
+        userId: req.user.userId,
+        requestedAt: new Date()
+      });
+      await group.save();
+      res.status(200).json({ message: 'Request sent — waiting for organizer approval' });
+    } else {
+      res.status(400).json({ message: 'Invalid group privacy setting' });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Error joining group', error });
   }
@@ -273,6 +301,141 @@ const bookmarkGroup = async (req, res) => {
   }
 };
 
+// Approve a pending request to join a group
+const approveRequest = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Check if user is the organizer (createdBy)
+    if (group.createdBy.toString() !== req.user.userId.toString()) {
+      return res.status(403).json({ message: 'Only the group organizer can approve requests' });
+    }
+
+    const requestUserId = req.params.userId;
+    
+    // Find the pending request
+    const pendingRequest = group.pendingRequests.find(request => 
+      request.userId.toString() === requestUserId
+    );
+
+    if (!pendingRequest) {
+      return res.status(404).json({ message: 'Pending request not found' });
+    }
+
+    // Add user to members
+    group.members.push(requestUserId);
+    
+    // Remove from pending requests
+    group.pendingRequests = group.pendingRequests.filter(request => 
+      request.userId.toString() !== requestUserId
+    );
+
+    await group.save();
+
+    res.status(200).json({ message: 'Request approved successfully' });
+  } catch (error) {
+    console.error('Error approving request:', error);
+    res.status(500).json({ message: 'Error approving request', error: error.message });
+  }
+};
+
+// Reject a pending request to join a group
+const rejectRequest = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Check if user is the organizer (createdBy)
+    if (group.createdBy.toString() !== req.user.userId.toString()) {
+      return res.status(403).json({ message: 'Only the group organizer can reject requests' });
+    }
+
+    const requestUserId = req.params.userId;
+    
+    // Find the pending request
+    const pendingRequest = group.pendingRequests.find(request => 
+      request.userId.toString() === requestUserId
+    );
+
+    if (!pendingRequest) {
+      return res.status(404).json({ message: 'Pending request not found' });
+    }
+
+    // Remove from pending requests
+    group.pendingRequests = group.pendingRequests.filter(request => 
+      request.userId.toString() !== requestUserId
+    );
+
+    await group.save();
+
+    res.status(200).json({ message: 'Request rejected successfully' });
+  } catch (error) {
+    console.error('Error rejecting request:', error);
+    res.status(500).json({ message: 'Error rejecting request', error: error.message });
+  }
+};
+
+// Withdraw a pending request to join a group
+const withdrawRequest = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    const requestUserId = req.user.userId;
+    
+    // Find the pending request
+    const pendingRequest = group.pendingRequests.find(request => 
+      request.userId.toString() === requestUserId
+    );
+
+    if (!pendingRequest) {
+      return res.status(404).json({ message: 'No pending request found for this user' });
+    }
+
+    // Remove from pending requests
+    group.pendingRequests = group.pendingRequests.filter(request => 
+      request.userId.toString() !== requestUserId
+    );
+
+    await group.save();
+
+    res.status(200).json({ message: 'Request withdrawn successfully' });
+  } catch (error) {
+    console.error('Error withdrawing request:', error);
+    res.status(500).json({ message: 'Error withdrawing request', error: error.message });
+  }
+};
+
+// Get pending requests for a group
+const getPendingRequests = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id)
+      .populate('pendingRequests.userId', 'name email profileImage')
+      .populate('createdBy', 'name email profileImage');
+
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Check if user is the organizer (createdBy)
+    if (group.createdBy._id.toString() !== req.user.userId.toString()) {
+      return res.status(403).json({ message: 'Only the group organizer can view pending requests' });
+    }
+
+    res.status(200).json(group.pendingRequests);
+  } catch (error) {
+    console.error('Error fetching pending requests:', error);
+    res.status(500).json({ message: 'Error fetching pending requests', error: error.message });
+  }
+};
+
 module.exports = {
   getAllGroups,
   getGroupById,
@@ -283,5 +446,9 @@ module.exports = {
   leaveGroup,
   updateGroup,
   deleteGroup,
-  bookmarkGroup
+  bookmarkGroup,
+  approveRequest,
+  rejectRequest,
+  withdrawRequest,
+  getPendingRequests
 };
