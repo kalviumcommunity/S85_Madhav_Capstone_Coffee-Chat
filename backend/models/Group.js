@@ -45,6 +45,10 @@ const groupSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User' 
   }],
+  pendingRequests: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    requestedAt: { type: Date, default: Date.now }
+  }],
   admins: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

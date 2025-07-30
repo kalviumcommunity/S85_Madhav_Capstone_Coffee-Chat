@@ -10,7 +10,11 @@ const {
   leaveGroup,
   updateGroup, 
   deleteGroup,
-  bookmarkGroup
+  bookmarkGroup,
+  approveRequest,
+  rejectRequest,
+  withdrawRequest,
+  getPendingRequests
 } = require('../controllers/groupController');
 const auth = require('../middleware/auth');
 
@@ -51,5 +55,11 @@ router.post('/:id/leave', auth, leaveGroup);
 router.post('/:id/bookmark', auth, bookmarkGroup);
 router.put('/:id', auth, updateGroup);
 router.delete('/:id', auth, deleteGroup);
+
+// Group request management routes
+router.get('/:id/pending-requests', auth, getPendingRequests);
+router.post('/:id/approve/:userId', auth, approveRequest);
+router.post('/:id/reject/:userId', auth, rejectRequest);
+router.post('/:id/withdraw-request', auth, withdrawRequest);
 
 module.exports = router;

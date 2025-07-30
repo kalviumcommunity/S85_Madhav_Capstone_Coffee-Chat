@@ -19,7 +19,8 @@ import {
   Eye,
   Heart,
   TrendingUp,
-  Coffee
+  Coffee,
+  Clock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './Groups.css';
@@ -265,15 +266,48 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
       });
 
       if (response.ok) {
-        toast.success('Successfully joined the group!');
+        const data = await response.json();
+        if (data.message === 'Request sent — waiting for organizer approval') {
+          toast.success('Request sent — waiting for organizer approval');
+        } else {
+          toast.success('Successfully joined the group!');
+        }
         fetchGroups(); // Refresh groups to update member count
       } else {
         const data = await response.json();
-        toast.error(data.error || 'Failed to join group');
+        toast.error(data.message || 'Failed to join group');
       }
     } catch (error) {
       console.error('Error joining group:', error);
       toast.error('Failed to join group');
+    }
+  };
+
+  const handleWithdrawRequest = async (groupId) => {
+    if (!user) {
+      toast.error('Please log in to withdraw requests');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BACKEND_URL}/api/groups/${groupId}/withdraw-request`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        toast.success('Request withdrawn successfully');
+        fetchGroups(); // Refresh groups to update member count
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to withdraw request');
+      }
+    } catch (error) {
+      console.error('Error withdrawing request:', error);
+      toast.error('Failed to withdraw request');
     }
   };
 
@@ -336,8 +370,13 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
 
   const GroupCard = ({ group, onBookmarkSync }) => {
     const isMember = group.isMember || group.members?.some(member => member._id === user?._id);
+    const isCreator = group.createdBy?._id === user?._id;
     const isBookmarked = group.isBookmarked || user?.bookmarkedGroups?.includes(group._id);
     const memberCount = group.memberCount || group.members?.length || 0;
+    
+    // Check if user has a pending request
+    const hasPendingRequest = group.pendingRequests && user && 
+      group.pendingRequests.some(request => request.userId === user._id);
     
     return (
       <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 border border-white/20 overflow-hidden">
@@ -365,12 +404,12 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
           <div className="absolute top-4 right-4 flex space-x-2">
             {/* Privacy Badge */}
             <span className={`px-3 py-1 rounded-full font-semibold text-sm shadow-lg backdrop-blur-sm ${
-              group.privacy === 'Public' 
+              group.privacy === 'public' 
                 ? 'bg-green-100 text-green-700' 
                 : 'bg-red-100 text-red-700'
             }`}>
-              {group.privacy === 'Public' ? <Unlock className="w-4 h-4 inline mr-1" /> : <Lock className="w-4 h-4 inline mr-1" />}
-              {group.privacy}
+              {group.privacy === 'public' ? <Unlock className="w-4 h-4 inline mr-1" /> : <Lock className="w-4 h-4 inline mr-1" />}
+              {group.privacy === 'public' ? 'Public' : 'Private'}
             </span>
             
             {/* Bookmark Button */}
@@ -412,14 +451,32 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
           </div>
 
           {/* Join/Leave Button */}
-          {!isMember ? (
-            <button
-              onClick={() => handleJoinGroup(group._id)}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2"
-            >
-              <Users className="w-5 h-5" />
-              <span>Join Group</span>
-            </button>
+          {!isMember && !isCreator ? (
+            hasPendingRequest ? (
+              <div className="space-y-2">
+                <button
+                  disabled
+                  className="w-full bg-gray-400 text-white font-semibold py-3 px-6 rounded-xl shadow-lg cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  <Clock className="w-5 h-5" />
+                  <span>Request Sent</span>
+                </button>
+                <button
+                  onClick={() => handleWithdrawRequest(group._id)}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 text-sm"
+                >
+                  <span>Withdraw Request</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleJoinGroup(group._id)}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2"
+              >
+                <Users className="w-5 h-5" />
+                <span>{group.privacy === 'private' ? 'Request to Join' : 'Join Group'}</span>
+              </button>
+            )
           ) : (
             <button
               className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg cursor-default flex items-center justify-center space-x-2"
@@ -455,8 +512,13 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
   const GroupListCard = ({ group }) => {
     console.log('Group image:', group.image); // Debug log
     const isMember = group.isMember || group.members?.some(member => member._id === user?._id);
+    const isCreator = group.createdBy?._id === user?._id;
     const isBookmarked = group.isBookmarked || user?.bookmarkedGroups?.includes(group._id);
     const memberCount = group.memberCount || group.members?.length || 0;
+    
+    // Check if user has a pending request
+    const hasPendingRequest = group.pendingRequests && user && 
+      group.pendingRequests.some(request => request.userId === user._id);
 
     return (
       <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-white/20 w-full">
@@ -494,17 +556,35 @@ const Groups = ({ user, setUser, groups = [], setGroups, setLoading }) => {
                 <Calendar className="w-4 h-4 text-orange-500" />
                 <span>{new Date(group.createdAt).toLocaleDateString()}</span>
               </div>
-              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${group.privacy === 'Public' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{group.privacy}</span>
+              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${group.privacy === 'public' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{group.privacy === 'public' ? 'Public' : 'Private'}</span>
             </div>
             <div className="flex gap-3">
-              {!isMember ? (
-                <button
-                  onClick={() => handleJoinGroup(group._id)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
-                >
-                  <Users className="w-5 h-5" />
-                  <span>Join</span>
-                </button>
+              {!isMember && !isCreator ? (
+                hasPendingRequest ? (
+                  <div className="flex flex-col gap-2">
+                    <button
+                      disabled
+                      className="bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg shadow-lg cursor-not-allowed flex items-center space-x-2"
+                    >
+                      <Clock className="w-5 h-5" />
+                      <span>Request Sent</span>
+                    </button>
+                    <button
+                      onClick={() => handleWithdrawRequest(group._id)}
+                      className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 text-xs"
+                    >
+                      <span>Withdraw</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleJoinGroup(group._id)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
+                  >
+                    <Users className="w-5 h-5" />
+                    <span>{group.privacy === 'private' ? 'Request to Join' : 'Join'}</span>
+                  </button>
+                )
               ) : (
                 <button
                   className="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg cursor-default flex items-center space-x-2"
